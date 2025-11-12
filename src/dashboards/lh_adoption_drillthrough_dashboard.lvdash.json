@@ -1,0 +1,654 @@
+{
+  "datasets": [
+    {
+      "name": "a80f219d",
+      "displayName": "mvfactdashboardusage",
+      "queryLines": [
+        "use catalog identifier(:catalog);\n",
+        "use schema identifier(:schema);\n",
+        "SELECT \n",
+        "* \n",
+        "FROM mvfactdashboardusage\n",
+        "where dashboard_id = :dashboard_id"
+      ],
+      "parameters": [
+        {
+          "displayName": "Dashboard_Name",
+          "keyword": "dashboard_id",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "01f0488f9d0512a888637140fa4ad49a"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "catalog",
+          "keyword": "catalog",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "users"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "schema",
+          "keyword": "schema",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "mike_dobing"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "831a30f4",
+      "displayName": "adb_dashboards",
+      "queryLines": [
+        "use catalog identifier(:catalog);\n",
+        "use schema identifier(:schema);\n",
+        "SELECT * FROM adb_dashboards  where dashboard_id = :dashboard_id\n"
+      ],
+      "parameters": [
+        {
+          "displayName": "catalog",
+          "keyword": "catalog",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "users"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "schema",
+          "keyword": "schema",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "mike_dobing"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "displayName": "dashboard_id",
+          "keyword": "dashboard_id",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "01f0488f9d0512a888637140fa4ad49a"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "f4350a1a",
+      "displayName": "Summary",
+      "layout": [
+        {
+          "widget": {
+            "name": "18bc0801",
+            "multilineTextboxSpec": {
+              "lines": [
+                "# Dashboard Summary\n",
+                "\n",
+                "# "
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 3,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "27b5b4c2",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "831a30f4",
+                  "fields": [
+                    {
+                      "name": "display_name",
+                      "expression": "`display_name`"
+                    },
+                    {
+                      "name": "create_time",
+                      "expression": "`create_time`"
+                    },
+                    {
+                      "name": "lifecycle_state",
+                      "expression": "`lifecycle_state`"
+                    },
+                    {
+                      "name": "update_time",
+                      "expression": "`update_time`"
+                    },
+                    {
+                      "name": "warehouse_id",
+                      "expression": "`warehouse_id`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "display_name",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 100001,
+                    "title": "display_name",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "display_name"
+                  },
+                  {
+                    "fieldName": "create_time",
+                    "dateTimeFormat": "DD/MM/YYYY HH:mm:ss.SSS",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "datetime",
+                    "displayAs": "datetime",
+                    "visible": true,
+                    "order": 100002,
+                    "title": "create_time",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "create_time"
+                  },
+                  {
+                    "fieldName": "lifecycle_state",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 100003,
+                    "title": "lifecycle_state",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "lifecycle_state"
+                  },
+                  {
+                    "fieldName": "update_time",
+                    "dateTimeFormat": "DD/MM/YYYY HH:mm:ss.SSS",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "datetime",
+                    "displayAs": "datetime",
+                    "visible": true,
+                    "order": 100004,
+                    "title": "update_time",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "update_time"
+                  },
+                  {
+                    "fieldName": "warehouse_id",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 100005,
+                    "title": "warehouse_id",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "cellFormat": {
+                      "default": {
+                        "foregroundColor": null
+                      },
+                      "rules": [
+                        {
+                          "if": {
+                            "column": "warehouse_id",
+                            "fn": "!=",
+                            "literal": "[lifecycle_state]"
+                          },
+                          "value": {
+                            "foregroundColor": {
+                              "themeColorType": "visualizationColors",
+                              "position": 3
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "displayName": "warehouse_id"
+                  }
+                ]
+              },
+              "invisibleColumns": [
+                {
+                  "booleanValues": [
+                    "false",
+                    "true"
+                  ],
+                  "imageUrlTemplate": "{{ @ }}",
+                  "imageTitleTemplate": "{{ @ }}",
+                  "imageWidth": "",
+                  "imageHeight": "",
+                  "linkUrlTemplate": "{{ @ }}",
+                  "linkTextTemplate": "{{ @ }}",
+                  "linkTitleTemplate": "{{ @ }}",
+                  "linkOpenInNewTab": true,
+                  "name": "dashboard_id",
+                  "type": "string",
+                  "displayAs": "string",
+                  "order": 100000,
+                  "title": "dashboard_id",
+                  "allowSearch": false,
+                  "alignContent": "left",
+                  "allowHTML": false,
+                  "highlightLinks": false,
+                  "useMonospaceFont": false,
+                  "preserveWhitespace": false
+                }
+              ],
+              "allowHTMLByDefault": false,
+              "itemsPerPage": 25,
+              "paginationSize": "default",
+              "condensed": true,
+              "withRowNumber": false,
+              "frame": {
+                "showTitle": true,
+                "title": "Dashboard Details"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 1,
+            "width": 6,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "57feb775",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "a80f219d",
+                  "fields": [
+                    {
+                      "name": "sum(num_views)",
+                      "expression": "SUM(`num_views`)"
+                    }
+                  ],
+                  "parameterValues": [
+                    {
+                      "keyword": "dashboard_id",
+                      "selection": {}
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(num_views)",
+                  "displayName": "Sum of num_views"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Total Views"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 4,
+            "width": 2,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "99f265c4",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "a80f219d",
+                  "fields": [
+                    {
+                      "name": "sum(DraftDashboardViews)",
+                      "expression": "SUM(`DraftDashboardViews`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(DraftDashboardViews)",
+                  "displayName": "Sum of DraftDashboardViews"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Draft Views"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 3,
+            "width": 2,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "51ee1431",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "a80f219d",
+                  "fields": [
+                    {
+                      "name": "sum(PublishedDashboardViews)",
+                      "expression": "SUM(`PublishedDashboardViews`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(PublishedDashboardViews)",
+                  "displayName": "Sum of PublishedDashboardViews"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Published Views"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 5,
+            "width": 2,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "fc082d2a",
+            "multilineTextboxSpec": {
+              "lines": [
+                "Provides detailed information for a specific dashboard"
+              ]
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 0,
+            "width": 1,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "42b2ef2e",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "a80f219d",
+                  "fields": [
+                    {
+                      "name": "monthly(viewed_date)",
+                      "expression": "DATE_TRUNC(\"MONTH\", `viewed_date`)"
+                    },
+                    {
+                      "name": "sum(num_views)",
+                      "expression": "SUM(`num_views`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "area",
+              "encodings": {
+                "x": {
+                  "fieldName": "monthly(viewed_date)",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "displayName": "Month"
+                },
+                "y": {
+                  "fieldName": "sum(num_views)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Total views"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 3,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "dashboard",
+            "queries": [
+              {
+                "name": "parameter_dashboards/01f0bbbfb0c012308832ae1b8b7b8523/datasets/01f0bbc1c3b91501b75b53e84a03970d_dashboard_id",
+                "query": {
+                  "datasetName": "a80f219d",
+                  "parameters": [
+                    {
+                      "name": "dashboard_id",
+                      "keyword": "dashboard_id"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "parameter_dashboards/01f0bbbfb0c012308832ae1b8b7b8523/datasets/01f0bbc1c3b9154b9264b9680f6adf91_dashboard_id",
+                "query": {
+                  "datasetName": "831a30f4",
+                  "parameters": [
+                    {
+                      "name": "dashboard_id",
+                      "keyword": "dashboard_id"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-single-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "parameterName": "dashboard_id",
+                    "queryName": "parameter_dashboards/01f0bbbfb0c012308832ae1b8b7b8523/datasets/01f0bbc1c3b91501b75b53e84a03970d_dashboard_id"
+                  },
+                  {
+                    "parameterName": "dashboard_id",
+                    "queryName": "parameter_dashboards/01f0bbbfb0c012308832ae1b8b7b8523/datasets/01f0bbc1c3b9154b9264b9680f6adf91_dashboard_id"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Dashboard"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 0,
+            "width": 2,
+            "height": 1
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS"
+    },
+    {
+      "name": "bd324e69",
+      "displayName": "Global Filters",
+      "pageType": "PAGE_TYPE_GLOBAL_FILTERS"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+    },
+    "genieSpace": {
+      "isEnabled": false
+    },
+    "applyModeEnabled": false
+  }
+}

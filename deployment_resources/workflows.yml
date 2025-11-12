@@ -1,0 +1,44 @@
+resources:
+  jobs:
+    adoption_dash_job:
+      name: adoption_dashboard_workflow
+      tasks:
+        - task_key: Ingest_Metadata
+          notebook_task:
+            notebook_path: ../src/01_get_metadata.ipynb
+        - task_key: Process_MatVews
+          depends_on:
+            - task_key: Ingest_Metadata
+          sql_task:
+            file:
+              path: ../src/02_mvFactDashboardUsage.sql
+            warehouse_id: ${var.my_warehouse_id}
+        - task_key: Process_Genie
+          depends_on:
+            - task_key: Ingest_Metadata
+          sql_task:
+            file:
+              path: ../src/02_mvFactGenieUsage.sql
+            warehouse_id: ${var.my_warehouse_id}
+        - task_key: Update_dashboard_parameters
+          depends_on:
+            - task_key: Process_Genie
+            - task_key: Process_MatVews
+          notebook_task:
+            notebook_path: ../src/03_update_dashboard_parameters.ipynb
+          
+          
+      queue:
+        enabled: true
+      parameters:
+        - name: skip_update
+          default: ${var.skip_update}
+        - name: catalog_name
+          default: users
+        - name: schema_name
+          default: ${workspace.current_user.short_name}
+        - name: dashboard_id
+          default: ${resources.dashboards.lh_adoption_drillthrough_dash.id}
+        - name: deployed
+          default: true
+      performance_target: PERFORMANCE_OPTIMIZED

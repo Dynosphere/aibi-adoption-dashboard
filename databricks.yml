@@ -1,0 +1,23 @@
+# Databricks Asset Bundle configuration, more info here: https://docs.databricks.com/en/dev-tools/bundles/settings.html
+bundle:
+  name: "adoption_dashboard"
+
+include:
+  - deployment_resources/*.yml
+  - 
+# Line prevents dashboard files being duplicated during deployment.
+sync:
+  exclude:
+    - src/dashboards/*.lvdash.json
+targets:
+  # The 'dev' target, for development purposes. This target is the default, and will use the workspace url of your current workspace or development profile.
+  dev:
+    mode: development
+    # workspace: 
+      # host: <your url here>
+  # In our scenario, we don't want dashboards with [dev username] prefix, so we default to a production deployment
+  deployed:
+    mode: production
+    default: true
+    workspace:
+      root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}

@@ -1,0 +1,7 @@
+variables:
+  my_warehouse_id:
+    description: The ID of a warehouse for your dashboard and pipeline
+    default: <SQL_Warehouse_ID>
+  skip_update:
+    description: Skip update flag for the SDK calls which can be time consuming
+    default: false
