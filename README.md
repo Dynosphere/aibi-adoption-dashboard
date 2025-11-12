@@ -11,7 +11,9 @@ It helps data teams, business stakeholders, and platform owners quickly understa
 
 ## Quick Start
 1. Create a git folder in your Databricks workspace OR download the zip and import to your workspace
-2. Update the variable overrides with your datawarehouse id to be used to run the audit queries
+2. You need to update the variables for your parameters. There are two approaches here:
+    1. If you're deploying into one workspace, we recommend updating `/deployment_resources/variables.yml` defaults directly with your `warehouse_id`, `catalog_name` and `schema_name`.
+    2. If you're deploying to many workspaces, you should set these values as variable overrides during deployment as part of your CICD process. See [this doc link](https://docs.databricks.com/aws/en/dev-tools/bundles/variables#set-a-variables-value)
 3. Deploy the Asset Bundle
 4. Run the adoption_dashboard_workflow job, this will update the necessary parameters
 5. Open the Adoption Dashboard dashboard, click publish. Open the Adaoption Dashbroad drillthrough dashboard, click publish

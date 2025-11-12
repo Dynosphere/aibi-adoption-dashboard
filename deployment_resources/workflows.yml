@@ -34,9 +34,9 @@ resources:
         - name: skip_update
           default: ${var.skip_update}
         - name: catalog_name
-          default: users
+          default: ${var.catalog_name}
         - name: schema_name
-          default: ${workspace.current_user.short_name}
+          default: ${var.schema_name}
         - name: dashboard_id
           default: ${resources.dashboards.lh_adoption_drillthrough_dash.id}
         - name: deployed
