@@ -27,7 +27,7 @@
               "dataType": "STRING",
               "values": [
                 {
-                  "value": "users"
+                  "value": "field_eng_slc"
                 }
               ]
             }
@@ -42,7 +42,7 @@
               "dataType": "STRING",
               "values": [
                 {
-                  "value": "mike_dobing"
+                  "value": "adoption"
                 }
               ]
             }
@@ -81,7 +81,7 @@
               "dataType": "STRING",
               "values": [
                 {
-                  "value": "users"
+                  "value": "field_eng_slc"
                 }
               ]
             }
@@ -96,7 +96,7 @@
               "dataType": "STRING",
               "values": [
                 {
-                  "value": "mike_dobing"
+                  "value": "adoption"
                 }
               ]
             }
@@ -191,7 +191,7 @@
               "dataType": "STRING",
               "values": [
                 {
-                  "value": "users"
+                  "value": "field_eng_slc"
                 }
               ]
             }
@@ -206,7 +206,7 @@
               "dataType": "STRING",
               "values": [
                 {
-                  "value": "mike_dobing"
+                  "value": "adoption"
                 }
               ]
             }
@@ -221,7 +221,7 @@
               "dataType": "STRING",
               "values": [
                 {
-                  "value": "https://e2-demo-west.cloud.databricks.com"
+                  "value": "https://eastus2.azuredatabricks.net"
                 }
               ]
             }
@@ -236,7 +236,7 @@
               "dataType": "STRING",
               "values": [
                 {
-                  "value": "01f0d05a58df10cca6d67c98402df5b7"
+                  "value": ""
                 }
               ]
             }
@@ -263,7 +263,7 @@
               "dataType": "STRING",
               "values": [
                 {
-                  "value": "users"
+                  "value": "field_eng_slc"
                 }
               ]
             }
@@ -278,7 +278,7 @@
               "dataType": "STRING",
               "values": [
                 {
-                  "value": "mike_dobing"
+                  "value": "adoption"
                 }
               ]
             }
@@ -318,7 +318,7 @@
               "dataType": "STRING",
               "values": [
                 {
-                  "value": "users"
+                  "value": "field_eng_slc"
                 }
               ]
             }
@@ -333,7 +333,7 @@
               "dataType": "STRING",
               "values": [
                 {
-                  "value": "mike_dobing"
+                  "value": "adoption"
                 }
               ]
             }
@@ -397,7 +397,7 @@
               "dataType": "STRING",
               "values": [
                 {
-                  "value": "users"
+                  "value": "field_eng_slc"
                 }
               ]
             }
@@ -412,7 +412,7 @@
               "dataType": "STRING",
               "values": [
                 {
-                  "value": "mike_dobing"
+                  "value": "adoption"
                 }
               ]
             }
@@ -597,7 +597,7 @@
               "dataType": "STRING",
               "values": [
                 {
-                  "value": "users"
+                  "value": "field_eng_slc"
                 }
               ]
             }
@@ -612,7 +612,7 @@
               "dataType": "STRING",
               "values": [
                 {
-                  "value": "mike_dobing"
+                  "value": "adoption"
                 }
               ]
             }
@@ -639,7 +639,7 @@
               "dataType": "STRING",
               "values": [
                 {
-                  "value": "users"
+                  "value": "field_eng_slc"
                 }
               ]
             }
@@ -654,7 +654,7 @@
               "dataType": "STRING",
               "values": [
                 {
-                  "value": "mike_dobing"
+                  "value": "adoption"
                 }
               ]
             }
@@ -684,7 +684,7 @@
               "dataType": "STRING",
               "values": [
                 {
-                  "value": "users"
+                  "value": "field_eng_slc"
                 }
               ]
             }
@@ -699,7 +699,7 @@
               "dataType": "STRING",
               "values": [
                 {
-                  "value": "mike_dobing"
+                  "value": "adoption"
                 }
               ]
             }
@@ -729,7 +729,7 @@
               "dataType": "STRING",
               "values": [
                 {
-                  "value": "users"
+                  "value": "field_eng_slc"
                 }
               ]
             }
@@ -744,7 +744,7 @@
               "dataType": "STRING",
               "values": [
                 {
-                  "value": "mike_dobing"
+                  "value": "adoption"
                 }
               ]
             }
@@ -790,9 +790,6 @@
               "encodings": {
                 "x": {
                   "fieldName": "daily(viewed_date)",
-                  "axis": {
-                    "title": "Viewed Date"
-                  },
                   "displayName": "viewed_date",
                   "scale": {
                     "type": "temporal"
@@ -800,9 +797,6 @@
                 },
                 "y": {
                   "fieldName": "sum(num_views)",
-                  "axis": {
-                    "title": "Views By Workspace"
-                  },
                   "displayName": "Views by workspace",
                   "scale": {
                     "type": "quantitative"
@@ -824,9 +818,90 @@
           },
           "position": {
             "x": 0,
-            "y": 12,
+            "y": 13,
             "width": 6,
             "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "2a722695",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "e2b9e81f",
+                  "fields": [
+                    {
+                      "name": "dashboard_id",
+                      "expression": "`dashboard_id`"
+                    },
+                    {
+                      "name": "sum(DraftDashboardViews)",
+                      "expression": "SUM(`DraftDashboardViews`)"
+                    },
+                    {
+                      "name": "sum(PublishedDashboardViews)",
+                      "expression": "SUM(`PublishedDashboardViews`)"
+                    },
+                    {
+                      "name": "sum(num_views)",
+                      "expression": "SUM(`num_views`)"
+                    },
+                    {
+                      "name": "dashboard_name",
+                      "expression": "`dashboard_name`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "sum(num_views)",
+                  "displayName": "Sum of num_views",
+                  "scale": {
+                    "type": "quantitative",
+                    "fn": {
+                      "type": "symlog"
+                    }
+                  }
+                },
+                "y": {
+                  "fieldName": "dashboard_name",
+                  "displayName": "dashboard_name",
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "x-reversed"
+                    }
+                  }
+                },
+                "extra": [
+                  {
+                    "fieldName": "dashboard_id"
+                  },
+                  {
+                    "fieldName": "sum(DraftDashboardViews)",
+                    "displayName": "Draft views"
+                  },
+                  {
+                    "fieldName": "sum(PublishedDashboardViews)",
+                    "displayName": "Published Views"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 24,
+            "width": 6,
+            "height": 12
           }
         },
         {
@@ -868,10 +943,10 @@
             }
           },
           "position": {
-            "x": 0,
-            "y": 5,
-            "width": 2,
-            "height": 2
+            "x": 1,
+            "y": 2,
+            "width": 1,
+            "height": 3
           }
         },
         {
@@ -955,7 +1030,7 @@
             }
           },
           "position": {
-            "x": 1,
+            "x": 2,
             "y": 2,
             "width": 1,
             "height": 3
@@ -981,10 +1056,6 @@
                     {
                       "name": "last_week_rank",
                       "expression": "`last_week_rank`"
-                    },
-                    {
-                      "name": "this_week_views",
-                      "expression": "`this_week_views`"
                     },
                     {
                       "name": "drillthrough_url",
@@ -1022,7 +1093,7 @@
                     "displayAs": "link",
                     "visible": true,
                     "order": 1,
-                    "title": "Dashboard Name",
+                    "title": "dashboard_name",
                     "allowSearch": false,
                     "alignContent": "left",
                     "allowHTML": false,
@@ -1054,8 +1125,8 @@
                     "type": "integer",
                     "displayAs": "number",
                     "visible": true,
-                    "order": 3,
-                    "title": "Current Week Rank",
+                    "order": 4,
+                    "title": "this_week_rank",
                     "allowSearch": false,
                     "alignContent": "right",
                     "allowHTML": false,
@@ -1124,35 +1195,8 @@
                     "type": "integer",
                     "displayAs": "number",
                     "visible": true,
-                    "order": 5,
-                    "title": "Last Week Rank",
-                    "allowSearch": false,
-                    "alignContent": "right",
-                    "allowHTML": false,
-                    "highlightLinks": false,
-                    "useMonospaceFont": false,
-                    "preserveWhitespace": false
-                  },
-                  {
-                    "fieldName": "this_week_views",
-                    "numberFormat": "0",
-                    "booleanValues": [
-                      "false",
-                      "true"
-                    ],
-                    "imageUrlTemplate": "{{ @ }}",
-                    "imageTitleTemplate": "{{ @ }}",
-                    "imageWidth": "",
-                    "imageHeight": "",
-                    "linkUrlTemplate": "{{ @ }}",
-                    "linkTextTemplate": "{{ @ }}",
-                    "linkTitleTemplate": "{{ @ }}",
-                    "linkOpenInNewTab": true,
-                    "type": "integer",
-                    "displayAs": "number",
-                    "visible": true,
-                    "order": 7,
-                    "title": "this_week_views",
+                    "order": 6,
+                    "title": "last_week_rank",
                     "allowSearch": false,
                     "alignContent": "right",
                     "allowHTML": false,
@@ -1190,6 +1234,32 @@
                   "preserveWhitespace": false
                 },
                 {
+                  "numberFormat": "0",
+                  "booleanValues": [
+                    "false",
+                    "true"
+                  ],
+                  "imageUrlTemplate": "{{ @ }}",
+                  "imageTitleTemplate": "{{ @ }}",
+                  "imageWidth": "",
+                  "imageHeight": "",
+                  "linkUrlTemplate": "{{ @ }}",
+                  "linkTextTemplate": "{{ @ }}",
+                  "linkTitleTemplate": "{{ @ }}",
+                  "linkOpenInNewTab": true,
+                  "name": "this_week_views",
+                  "type": "integer",
+                  "displayAs": "number",
+                  "order": 2,
+                  "title": "this_week_views",
+                  "allowSearch": false,
+                  "alignContent": "right",
+                  "allowHTML": false,
+                  "highlightLinks": false,
+                  "useMonospaceFont": false,
+                  "preserveWhitespace": false
+                },
+                {
                   "booleanValues": [
                     "false",
                     "true"
@@ -1205,7 +1275,7 @@
                   "name": "dashboard_id",
                   "type": "string",
                   "displayAs": "string",
-                  "order": 2,
+                  "order": 3,
                   "title": "dashboard_id",
                   "allowSearch": false,
                   "alignContent": "left",
@@ -1231,7 +1301,7 @@
                   "name": "last_week_views",
                   "type": "integer",
                   "displayAs": "number",
-                  "order": 4,
+                  "order": 5,
                   "title": "last_week_views",
                   "allowSearch": false,
                   "alignContent": "right",
@@ -1257,7 +1327,7 @@
                   "name": "two_weeks_ago_views",
                   "type": "integer",
                   "displayAs": "number",
-                  "order": 6,
+                  "order": 7,
                   "title": "two_weeks_ago_views",
                   "allowSearch": false,
                   "alignContent": "right",
@@ -1359,7 +1429,7 @@
                   "name": "workspace_id",
                   "type": "string",
                   "displayAs": "string",
-                  "order": 11,
+                  "order": 100003,
                   "title": "workspace_id",
                   "allowSearch": false,
                   "alignContent": "left",
@@ -1381,9 +1451,9 @@
             }
           },
           "position": {
-            "x": 2,
-            "y": 2,
-            "width": 4,
+            "x": 0,
+            "y": 19,
+            "width": 6,
             "height": 5
           }
         },
@@ -1518,9 +1588,122 @@
           },
           "position": {
             "x": 0,
-            "y": 7,
+            "y": 8,
             "width": 6,
             "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "24834a3f",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "dcb76dbb",
+                  "fields": [
+                    {
+                      "name": "sum(total_dashboard_clicks)",
+                      "expression": "SUM(`total_dashboard_clicks`)"
+                    },
+                    {
+                      "name": "username",
+                      "expression": "`username`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "sum(total_dashboard_clicks)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "displayName": "Sum of total_dashboard_clicks"
+                },
+                "color": {
+                  "fieldName": "username",
+                  "displayName": "username",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Dashboards visits by user"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 2,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "2fea3829",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "dcb76dbb",
+                  "fields": [
+                    {
+                      "name": "total_dashboard_clicks",
+                      "expression": "`total_dashboard_clicks`"
+                    },
+                    {
+                      "name": "username",
+                      "expression": "`username`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "username",
+                  "style": {
+                    "fontSize": 20
+                  },
+                  "displayName": "username"
+                },
+                "target": {
+                  "fieldName": "total_dashboard_clicks",
+                  "displayName": "total_dashboard_clicks"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "showDescription": true,
+                "title": "Biggest dashboard lover",
+                "description": "Last 7 days"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 5,
+            "width": 3,
+            "height": 3
           }
         },
         {
@@ -1632,7 +1815,7 @@
           },
           "position": {
             "x": 3,
-            "y": 18,
+            "y": 36,
             "width": 3,
             "height": 9
           }
@@ -1729,7 +1912,7 @@
           },
           "position": {
             "x": 0,
-            "y": 18,
+            "y": 36,
             "width": 3,
             "height": 9
           }
@@ -1755,8 +1938,8 @@
                       "expression": "DATE_TRUNC(\"MONTH\", `viewed_date`)"
                     },
                     {
-                      "name": "sum(num_views)",
-                      "expression": "SUM(`num_views`)"
+                      "name": "sum(num_spaces_accessed)",
+                      "expression": "SUM(`num_spaces_accessed`)"
                     }
                   ],
                   "disaggregated": false
@@ -1769,19 +1952,17 @@
               "encodings": {
                 "x": {
                   "fieldName": "monthly(viewed_date)",
-                  "displayName": "viewed_date",
                   "scale": {
                     "type": "temporal"
-                  }
+                  },
+                  "displayName": "viewed_date"
                 },
                 "y": {
-                  "fieldName": "sum(num_views)",
-                  "axis": {
-                    "title": "Number Of Spaces Accessed"
-                  },
+                  "fieldName": "sum(num_spaces_accessed)",
                   "scale": {
                     "type": "quantitative"
-                  }
+                  },
+                  "displayName": "Sum of num_spaces_accessed"
                 }
               },
               "frame": {
@@ -1848,9 +2029,9 @@
           },
           "position": {
             "x": 3,
-            "y": 1,
+            "y": 3,
             "width": 3,
-            "height": 8
+            "height": 6
           }
         },
         {
@@ -2170,6 +2351,178 @@
         },
         {
           "widget": {
+            "name": "3c96572b",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "26e7cfc1",
+                  "fields": [
+                    {
+                      "name": "status",
+                      "expression": "`status`"
+                    },
+                    {
+                      "name": "genie_space",
+                      "expression": "`genie_space`"
+                    }
+                  ],
+                  "cubeGroupingSets": {
+                    "sets": [
+                      {
+                        "fieldNames": [
+                          "status"
+                        ]
+                      },
+                      {}
+                    ]
+                  },
+                  "disaggregated": true,
+                  "orders": [
+                    {
+                      "direction": "ASC",
+                      "expression": "`status`"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "pivot",
+              "encodings": {
+                "rows": [
+                  {
+                    "fieldName": "status",
+                    "scale": {
+                      "type": "categorical",
+                      "sort": {
+                        "by": "natural-order-reversed"
+                      }
+                    },
+                    "displayName": "status"
+                  }
+                ],
+                "cell": {
+                  "type": "multi-cell",
+                  "fields": [
+                    {
+                      "fieldName": "genie_space",
+                      "cellType": "text",
+                      "displayName": "genie_space"
+                    }
+                  ],
+                  "width": 300
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 0,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "caf20252",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "d51dbc00",
+                  "fields": [
+                    {
+                      "name": "monthly(viewed_date)",
+                      "expression": "DATE_TRUNC(\"MONTH\", `viewed_date`)"
+                    },
+                    {
+                      "name": "countdistinct(space_Id)",
+                      "expression": "COUNT(DISTINCT `space_Id`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "monthly(viewed_date)",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "displayName": "viewed_date"
+                },
+                "y": {
+                  "fieldName": "countdistinct(space_Id)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Total number of spaces"
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "mark": {
+                "colors": [
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 2
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 5
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 6
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 7
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 8
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 9
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 10
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 21,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
             "name": "96382896",
             "queries": [
               {
@@ -2314,51 +2667,6 @@
             "width": 2,
             "height": 6
           }
-        },
-        {
-          "widget": {
-            "name": "52e3eeec",
-            "queries": [
-              {
-                "name": "dashboards/01f0d05a59391ad087e297c5e9c9aed5/datasets/01f0d05da6581e6e84c867b2a54c62c8_genie_space",
-                "query": {
-                  "datasetName": "d51dbc00",
-                  "fields": [
-                    {
-                      "name": "genie_space",
-                      "expression": "`genie_space`"
-                    },
-                    {
-                      "name": "genie_space_associativity",
-                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              }
-            ],
-            "spec": {
-              "version": 2,
-              "widgetType": "filter-single-select",
-              "encodings": {
-                "fields": [
-                  {
-                    "fieldName": "genie_space",
-                    "queryName": "dashboards/01f0d05a59391ad087e297c5e9c9aed5/datasets/01f0d05da6581e6e84c867b2a54c62c8_genie_space"
-                  }
-                ]
-              },
-              "frame": {
-                "showTitle": true
-              }
-            }
-          },
-          "position": {
-            "x": 3,
-            "y": 0,
-            "width": 3,
-            "height": 1
-          }
         }
       ],
       "pageType": "PAGE_TYPE_CANVAS"
@@ -2463,7 +2771,7 @@
           "position": {
             "x": 1,
             "y": 0,
-            "width": 2,
+            "width": 3,
             "height": 3
           }
         },
@@ -2533,10 +2841,10 @@
             }
           },
           "position": {
-            "x": 3,
-            "y": 1,
-            "width": 3,
-            "height": 8
+            "x": 4,
+            "y": 0,
+            "width": 2,
+            "height": 9
           }
         },
         {
@@ -2596,7 +2904,7 @@
           "position": {
             "x": 0,
             "y": 3,
-            "width": 3,
+            "width": 4,
             "height": 6
           }
         },
@@ -2734,52 +3042,6 @@
             "width": 3,
             "height": 6
           }
-        },
-        {
-          "widget": {
-            "name": "application-name",
-            "queries": [
-              {
-                "name": "dashboards/01f0d05a59391ad087e297c5e9c9aed5/datasets/01f0d05da6581eaf9655caec7ea3b20b_app_name",
-                "query": {
-                  "datasetName": "a19ba0f5",
-                  "fields": [
-                    {
-                      "name": "app_name",
-                      "expression": "`app_name`"
-                    },
-                    {
-                      "name": "app_name_associativity",
-                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              }
-            ],
-            "spec": {
-              "version": 2,
-              "widgetType": "filter-single-select",
-              "encodings": {
-                "fields": [
-                  {
-                    "fieldName": "app_name",
-                    "queryName": "dashboards/01f0d05a59391ad087e297c5e9c9aed5/datasets/01f0d05da6581eaf9655caec7ea3b20b_app_name"
-                  }
-                ]
-              },
-              "frame": {
-                "showTitle": true,
-                "title": "Application Name"
-              }
-            }
-          },
-          "position": {
-            "x": 3,
-            "y": 0,
-            "width": 3,
-            "height": 1
-          }
         }
       ],
       "pageType": "PAGE_TYPE_CANVAS"
@@ -2823,8 +3085,8 @@
           "position": {
             "x": 0,
             "y": 0,
-            "width": 1,
-            "height": 1
+            "width": 2,
+            "height": 2
           }
         },
         {
@@ -2885,7 +3147,7 @@
           },
           "position": {
             "x": 0,
-            "y": 1,
+            "y": 2,
             "width": 3,
             "height": 6
           }
@@ -2951,94 +3213,9 @@
           },
           "position": {
             "x": 3,
-            "y": 1,
+            "y": 2,
             "width": 3,
             "height": 6
-          }
-        },
-        {
-          "widget": {
-            "name": "model-name",
-            "queries": [
-              {
-                "name": "dashboards/01f0d05a59391ad087e297c5e9c9aed5/datasets/01f0d05da6581eb7b55852603c695ee4_model_name",
-                "query": {
-                  "datasetName": "75376ae2",
-                  "fields": [
-                    {
-                      "name": "model_name",
-                      "expression": "`model_name`"
-                    },
-                    {
-                      "name": "model_name_associativity",
-                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              }
-            ],
-            "spec": {
-              "version": 2,
-              "widgetType": "filter-single-select",
-              "encodings": {
-                "fields": [
-                  {
-                    "fieldName": "model_name",
-                    "queryName": "dashboards/01f0d05a59391ad087e297c5e9c9aed5/datasets/01f0d05da6581eb7b55852603c695ee4_model_name"
-                  }
-                ]
-              },
-              "frame": {
-                "showTitle": true,
-                "title": "Model Name"
-              }
-            }
-          },
-          "position": {
-            "x": 3,
-            "y": 0,
-            "width": 3,
-            "height": 1
-          }
-        },
-        {
-          "widget": {
-            "name": "number-of-inferences",
-            "queries": [
-              {
-                "name": "main_query",
-                "query": {
-                  "datasetName": "75376ae2",
-                  "fields": [
-                    {
-                      "name": "num_inferences",
-                      "expression": "`num_inferences`"
-                    }
-                  ],
-                  "disaggregated": true
-                }
-              }
-            ],
-            "spec": {
-              "version": 2,
-              "widgetType": "counter",
-              "encodings": {
-                "value": {
-                  "fieldName": "num_inferences"
-                }
-              },
-              "frame": {
-                "showTitle": true,
-                "title": "Number Of Inferences"
-              }
-            }
-          },
-          "position": {
-            "x": 1,
-            "y": 0,
-            "width": 2,
-            "height": 1
           }
         }
       ],
