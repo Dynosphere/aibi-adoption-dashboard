@@ -61,8 +61,6 @@ resources:
           default: ${var.catalog_name}
         - name: schema_name
           default: ${var.schema_name}
-        - name: dashboard_id
-          default: ${resources.dashboards.lh_adoption_drillthrough_dash.id}
         - name: deployed
           default: true
       performance_target: PERFORMANCE_OPTIMIZED

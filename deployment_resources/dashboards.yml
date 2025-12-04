@@ -4,10 +4,6 @@ resources:
       display_name: 'Lakehouse Adoption Dashboard'
       file_path: ../src/dashboards/lh_adoption_dashboard.lvdash.json
       warehouse_id: ${var.my_warehouse_id}
-    lh_adoption_drillthrough_dash:
-      display_name: 'Lakehouse Adoption Drillthrough'
-      file_path: ../src/dashboards/lh_adoption_drillthrough_dashboard.lvdash.json
-      warehouse_id: ${var.my_warehouse_id}
 
 
       
