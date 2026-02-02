@@ -3,6 +3,9 @@ resources:
     adoption_dash_job:
       name: adoption_dashboard_workflow
       tasks:
+        - task_key: Process_Genie_Deep_Dive
+          notebook_task:
+            notebook_path: ../src/04_genie_observability_deep_dive.ipynb
         - task_key: Ingest_Metadata
           notebook_task:
             notebook_path: ../src/01_get_metadata.ipynb
@@ -43,6 +46,7 @@ resources:
             warehouse_id: ${var.my_warehouse_id}
         - task_key: Update_dashboard_parameters
           depends_on:
+            - task_key: Process_Genie_Deep_Dive
             - task_key: Process_Genie
             - task_key: Process_MatVews
             - task_key: Process_Models
