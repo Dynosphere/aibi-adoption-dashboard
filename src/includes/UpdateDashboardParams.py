@@ -6,9 +6,9 @@ import json
 from typing import Dict, Any
 
 
-def update_parameters(dashboard_data: Dict[str, Any], new_catalog: str = None, new_schema: str = None, new_workspace_url: str = None, new_dashboard_id: str = None) -> Dict[str, Any]:
+def update_parameters(dashboard_data: Dict[str, Any], new_catalog: str = None, new_schema: str = None, new_workspace_url: str = None, new_dashboard_id: str = None, date_range_min: str = None, date_range_max: str = None, space_id_default: str = "ALL") -> Dict[str, Any]:
     """
-    Update catalog, schema, workspace URL, and dashboard ID parameters in dashboard JSON.
+    Update catalog, schema, workspace URL, dashboard ID, date ranges, and space ID parameters in dashboard JSON.
     
     Args:
         dashboard_data: The dashboard JSON data
@@ -16,6 +16,9 @@ def update_parameters(dashboard_data: Dict[str, Any], new_catalog: str = None, n
         new_schema: New schema value (None to skip)
         new_workspace_url: New workspace URL value (None to skip)
         new_dashboard_id: New dashboard ID value (None to skip)
+        date_range_min: Minimum date for date range parameters (None to skip)
+        date_range_max: Maximum date for date range parameters (None to skip)
+        space_id_default: Default value for space_id/genie_space_id parameters (default: "ALL")
     
     Returns:
         Updated dashboard data
@@ -77,6 +80,25 @@ def update_parameters(dashboard_data: Dict[str, Any], new_catalog: str = None, n
                 old_value = param['defaultSelection']['values']['values'][0]['value']
                 param['defaultSelection']['values']['values'][0]['value'] = new_dashboard_id
                 updates.append(f"Dataset '{dataset_name}': dashboard_id '{old_value}' -> '{new_dashboard_id}'")
+            
+            # Update date range parameter (keyword: "param" with complexType: "RANGE")
+            elif keyword == 'param' and param.get('complexType') == 'RANGE':
+                if 'range' in param['defaultSelection'] and (date_range_min is not None or date_range_max is not None):
+                    if date_range_min is not None:
+                        old_min = param['defaultSelection']['range']['min']['value']
+                        param['defaultSelection']['range']['min']['value'] = date_range_min
+                        updates.append(f"Dataset '{dataset_name}': date_range_min '{old_min}' -> '{date_range_min}'")
+                    if date_range_max is not None:
+                        old_max = param['defaultSelection']['range']['max']['value']
+                        param['defaultSelection']['range']['max']['value'] = date_range_max
+                        updates.append(f"Dataset '{dataset_name}': date_range_max '{old_max}' -> '{date_range_max}'")
+            
+            # Update space_id or genie_space_id parameters
+            elif keyword in ['space_id', 'genie_space_id'] and space_id_default is not None:
+                if 'values' in param['defaultSelection']:
+                    old_value = param['defaultSelection']['values']['values'][0]['value']
+                    param['defaultSelection']['values']['values'][0]['value'] = space_id_default
+                    updates.append(f"Dataset '{dataset_name}': {keyword} '{old_value}' -> '{space_id_default}'")
     
     # Print summary
     if updates:

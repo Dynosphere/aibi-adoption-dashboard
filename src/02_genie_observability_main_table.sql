@@ -8,7 +8,7 @@ SELECT
   m.user_id,
   m.user_email,
   m.status,
-  m.created_timestamp,
+  m.created_timestamp AS created_datetime,
   m.last_updated_timestamp,
   m.user_question,
   m.ai_response,
