@@ -1029,7 +1029,7 @@
     },
     {
       "name": "348e9612",
-      "displayName": "cost_per_message_genie",
+      "displayName": "av_cost_per_message_genie",
       "queryLines": [
         "USE CATALOG IDENTIFIER(:catalog);\n",
         "\n",
@@ -1069,7 +1069,7 @@
         "  c.genie_space_id AS space_id,\n",
         "  c.total_cost_usd,\n",
         "  m.total_messages,\n",
-        "  c.total_cost_usd / m.total_messages AS cost_per_message\n",
+        "  c.total_cost_usd / m.total_messages AS av_cost_per_message\n",
         "FROM cost_data c\n",
         "INNER JOIN message_data m ON c.genie_space_id = m.space_id;"
       ],
@@ -4940,8 +4940,8 @@
                   "datasetName": "348e9612",
                   "fields": [
                     {
-                      "name": "avg(cost_per_message)",
-                      "expression": "AVG(`cost_per_message`)"
+                      "name": "avg(av_cost_per_message)",
+                      "expression": "AVG(`av_cost_per_message`)"
                     }
                   ],
                   "disaggregated": false
@@ -4953,7 +4953,7 @@
               "widgetType": "counter",
               "encodings": {
                 "value": {
-                  "fieldName": "avg(cost_per_message)",
+                  "fieldName": "avg(av_cost_per_message)",
                   "format": {
                     "type": "number-currency",
                     "currencyCode": "USD",
