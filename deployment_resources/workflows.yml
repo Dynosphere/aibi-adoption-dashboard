@@ -53,11 +53,10 @@ resources:
             - task_key: Ingest_Metadata
           sql_task:
             file:
-              path: ../src/02_genie_observability_master_table.sql
+              path: ../src/02_genie_observability_main_table.sql
             warehouse_id: ${var.my_warehouse_id}
         - task_key: Update_dashboard_parameters
           depends_on:
-            - task_key: Process_Genie_Deep_Dive
             - task_key: Process_Genie
             - task_key: Process_MatVews
             - task_key: Process_Models
