@@ -1,16 +1,16 @@
 variables:
   my_warehouse_id:
     description: The ID of a warehouse for your dashboard and pipeline
-    default: <SQL_Warehouse_ID>
+    default: 148ccb90800933a1
   skip_update:
     description: Skip update flag for the SDK calls which can be time consuming
     default: false
   catalog_name:
     description: The name of the catalog to use for the dashboard
-    default: users
+    default: kg_demo_catalog
   schema_name:
     description: The name of the schema to use for the dashboard
-    default: ${workspace.current_user.short_name}
+    default: dqx_schema
   skip_get_conversations:
     description: Skip pulling all conversation content via API
     default: false

@@ -83,15 +83,14 @@ def update_parameters(dashboard_data: Dict[str, Any], new_catalog: str = None, n
             
             # Update date range parameter (keyword: "param" with complexType: "RANGE")
             elif keyword == 'param' and param.get('complexType') == 'RANGE':
-                if 'range' in param['defaultSelection'] and (date_range_min is not None or date_range_max is not None):
-                    if date_range_min is not None:
+                if 'range' in param['defaultSelection']:
+                    # Only update if both min and max are provided and non-empty
+                    if date_range_min and date_range_max:
                         old_min = param['defaultSelection']['range']['min']['value']
-                        param['defaultSelection']['range']['min']['value'] = date_range_min
-                        updates.append(f"Dataset '{dataset_name}': date_range_min '{old_min}' -> '{date_range_min}'")
-                    if date_range_max is not None:
                         old_max = param['defaultSelection']['range']['max']['value']
+                        param['defaultSelection']['range']['min']['value'] = date_range_min
                         param['defaultSelection']['range']['max']['value'] = date_range_max
-                        updates.append(f"Dataset '{dataset_name}': date_range_max '{old_max}' -> '{date_range_max}'")
+                        updates.append(f"Dataset '{dataset_name}': date_range '{old_min}' to '{old_max}' -> '{date_range_min}' to '{date_range_max}'")
             
             # Update space_id or genie_space_id parameters
             elif keyword in ['space_id', 'genie_space_id'] and space_id_default is not None:
