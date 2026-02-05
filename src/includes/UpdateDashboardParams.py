@@ -83,14 +83,33 @@ def update_parameters(dashboard_data: Dict[str, Any], new_catalog: str = None, n
             
             # Update date range parameter (keyword: "param" with complexType: "RANGE")
             elif keyword == 'param' and param.get('complexType') == 'RANGE':
+                # Use hardcoded defaults if not provided
+                min_value = date_range_min if date_range_min else "now-90d/d"
+                max_value = date_range_max if date_range_max else "now/d"
+                
                 if 'range' in param['defaultSelection']:
-                    # Only update if both min and max are provided and non-empty
-                    if date_range_min and date_range_max:
-                        old_min = param['defaultSelection']['range']['min']['value']
-                        old_max = param['defaultSelection']['range']['max']['value']
-                        param['defaultSelection']['range']['min']['value'] = date_range_min
-                        param['defaultSelection']['range']['max']['value'] = date_range_max
-                        updates.append(f"Dataset '{dataset_name}': date_range '{old_min}' to '{old_max}' -> '{date_range_min}' to '{date_range_max}'")
+                    # Update existing range structure
+                    old_min = param['defaultSelection']['range']['min']['value']
+                    old_max = param['defaultSelection']['range']['max']['value']
+                    param['defaultSelection']['range']['min']['value'] = min_value
+                    param['defaultSelection']['range']['max']['value'] = max_value
+                    updates.append(f"Dataset '{dataset_name}': date_range '{old_min}' to '{old_max}' -> '{min_value}' to '{max_value}'")
+                else:
+                    # Convert from 'values' structure to 'range' structure
+                    data_type = param.get('dataType', 'DATE')
+                    old_value = param['defaultSelection'].get('values', {}).get('values', [{}])[0].get('value', '')
+                    param['defaultSelection'] = {
+                        'range': {
+                            'dataType': data_type,
+                            'min': {
+                                'value': min_value
+                            },
+                            'max': {
+                                'value': max_value
+                            }
+                        }
+                    }
+                    updates.append(f"Dataset '{dataset_name}': date_range converted from values ('{old_value}') to range '{min_value}' to '{max_value}'")
             
             # Update space_id or genie_space_id parameters
             elif keyword in ['space_id', 'genie_space_id'] and space_id_default is not None:
