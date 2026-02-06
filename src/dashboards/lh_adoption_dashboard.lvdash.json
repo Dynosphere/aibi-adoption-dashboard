@@ -1040,7 +1040,7 @@
         "WITH cost_data AS (\n",
         "  SELECT \n",
         "    genie_space_id,\n",
-        "    SUM(cost_usd) AS total_cost_usd\n",
+        "    SUM(total_cost_usd) AS total_cost_usd\n",
         "  FROM genie_cost_analysis_main_table\n",
         "  WHERE start_time >= :param.min  \n",
         "    AND start_time <= :param.max\n",
@@ -3964,8 +3964,8 @@
                   "datasetName": "3655f221",
                   "fields": [
                     {
-                      "name": "sum(cost_usd)",
-                      "expression": "SUM(`cost_usd`)"
+                      "name": "sum(total_cost_usd)",
+                      "expression": "SUM(`total_cost_usd`)"
                     },
                     {
                       "name": "user_email",
@@ -3978,10 +3978,14 @@
             ],
             "spec": {
               "version": 3,
+              "frame": {
+                "title": "Total Cost by User",
+                "showTitle": true
+              },
               "widgetType": "pie",
               "encodings": {
                 "angle": {
-                  "fieldName": "sum(cost_usd)",
+                  "fieldName": "sum(total_cost_usd)",
                   "scale": {
                     "type": "quantitative"
                   }
@@ -4002,10 +4006,6 @@
                     ]
                   }
                 }
-              },
-              "frame": {
-                "title": "Total Cost by User",
-                "showTitle": true
               }
             }
           },
@@ -4082,8 +4082,8 @@
                   "datasetName": "3655f221",
                   "fields": [
                     {
-                      "name": "sum(cost_usd)",
-                      "expression": "SUM(`cost_usd`)"
+                      "name": "sum(total_cost_usd)",
+                      "expression": "SUM(`total_cost_usd`)"
                     }
                   ],
                   "disaggregated": false
@@ -4092,10 +4092,14 @@
             ],
             "spec": {
               "version": 2,
+              "frame": {
+                "title": "Total Cost incurred (USD)",
+                "showTitle": true
+              },
               "widgetType": "counter",
               "encodings": {
                 "value": {
-                  "fieldName": "sum(cost_usd)",
+                  "fieldName": "sum(total_cost_usd)",
                   "format": {
                     "type": "number-currency",
                     "currencyCode": "USD",
@@ -4106,10 +4110,6 @@
                     }
                   }
                 }
-              },
-              "frame": {
-                "title": "Total Cost incurred (USD)",
-                "showTitle": true
               }
             }
           },
