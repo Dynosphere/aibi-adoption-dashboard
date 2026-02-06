@@ -6,9 +6,9 @@ import json
 from typing import Dict, Any
 
 
-def update_parameters(dashboard_data: Dict[str, Any], new_catalog: str = None, new_schema: str = None, new_workspace_url: str = None, new_dashboard_id: str = None) -> Dict[str, Any]:
+def update_parameters(dashboard_data: Dict[str, Any], new_catalog: str = None, new_schema: str = None, new_workspace_url: str = None, new_dashboard_id: str = None, date_range_min: str = None, date_range_max: str = None, space_id_default: str = "ALL") -> Dict[str, Any]:
     """
-    Update catalog, schema, workspace URL, and dashboard ID parameters in dashboard JSON.
+    Update catalog, schema, workspace URL, dashboard ID, date ranges, and space ID parameters in dashboard JSON.
     
     Args:
         dashboard_data: The dashboard JSON data
@@ -16,6 +16,9 @@ def update_parameters(dashboard_data: Dict[str, Any], new_catalog: str = None, n
         new_schema: New schema value (None to skip)
         new_workspace_url: New workspace URL value (None to skip)
         new_dashboard_id: New dashboard ID value (None to skip)
+        date_range_min: Minimum date for date range parameters (None to skip)
+        date_range_max: Maximum date for date range parameters (None to skip)
+        space_id_default: Default value for space_id/genie_space_id parameters (default: "ALL")
     
     Returns:
         Updated dashboard data
@@ -77,6 +80,43 @@ def update_parameters(dashboard_data: Dict[str, Any], new_catalog: str = None, n
                 old_value = param['defaultSelection']['values']['values'][0]['value']
                 param['defaultSelection']['values']['values'][0]['value'] = new_dashboard_id
                 updates.append(f"Dataset '{dataset_name}': dashboard_id '{old_value}' -> '{new_dashboard_id}'")
+            
+            # Update date range parameter (keyword: "param" with complexType: "RANGE")
+            elif keyword == 'param' and param.get('complexType') == 'RANGE':
+                # Use hardcoded defaults if not provided
+                min_value = date_range_min if date_range_min else "now-90d/d"
+                max_value = date_range_max if date_range_max else "now/d"
+                
+                if 'range' in param['defaultSelection']:
+                    # Update existing range structure
+                    old_min = param['defaultSelection']['range']['min']['value']
+                    old_max = param['defaultSelection']['range']['max']['value']
+                    param['defaultSelection']['range']['min']['value'] = min_value
+                    param['defaultSelection']['range']['max']['value'] = max_value
+                    updates.append(f"Dataset '{dataset_name}': date_range '{old_min}' to '{old_max}' -> '{min_value}' to '{max_value}'")
+                else:
+                    # Convert from 'values' structure to 'range' structure
+                    data_type = param.get('dataType', 'DATE')
+                    old_value = param['defaultSelection'].get('values', {}).get('values', [{}])[0].get('value', '')
+                    param['defaultSelection'] = {
+                        'range': {
+                            'dataType': data_type,
+                            'min': {
+                                'value': min_value
+                            },
+                            'max': {
+                                'value': max_value
+                            }
+                        }
+                    }
+                    updates.append(f"Dataset '{dataset_name}': date_range converted from values ('{old_value}') to range '{min_value}' to '{max_value}'")
+            
+            # Update space_id or genie_space_id parameters
+            elif keyword in ['space_id', 'genie_space_id'] and space_id_default is not None:
+                if 'values' in param['defaultSelection']:
+                    old_value = param['defaultSelection']['values']['values'][0]['value']
+                    param['defaultSelection']['values']['values'][0]['value'] = space_id_default
+                    updates.append(f"Dataset '{dataset_name}': {keyword} '{old_value}' -> '{space_id_default}'")
     
     # Print summary
     if updates:
