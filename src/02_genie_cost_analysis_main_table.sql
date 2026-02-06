@@ -1,4 +1,4 @@
-CREATE OR REPLACE TABLE IDENTIFIER(:catalog_name || '.' || :schema_name || '.genie_cost_analysis_enhanced') 
+CREATE OR REPLACE TABLE IDENTIFIER(:catalog_name || '.' || :schema_name || '.genie_cost_analysis_main_table') 
 COMMENT 'Granular cost attribution for Databricks Genie spaces, accounting for idle time and hourly fluctuations.'
 AS
 WITH 
