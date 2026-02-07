@@ -41,7 +41,7 @@ resources:
             file:
               path: ../src/02_mvFactAppUsage.sql
             warehouse_id: ${var.my_warehouse_id}
-        - task_key: Process_genie_costs
+        - task_key: Process_dbsql_cost_per_query
           depends_on:
             - task_key: Ingest_Metadata
           sql_task:
