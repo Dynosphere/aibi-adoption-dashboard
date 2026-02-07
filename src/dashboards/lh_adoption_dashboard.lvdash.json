@@ -3744,16 +3744,16 @@
             "name": "genie-space",
             "queries": [
               {
-                "name": "dashboards/01f103a348bb14e1a13805924e97b2ff/datasets/01f103b30b7d1b14ad5a2d89b6e47b3d_space_id",
+                "name": "dashboards/01f103a348bb14e1a13805924e97b2ff/datasets/01f103b30b7d1b14ad5a2d89b6e47b3d_space_name",
                 "query": {
                   "datasetName": "fe27bc16",
                   "fields": [
                     {
-                      "name": "space_id",
-                      "expression": "`space_id`"
+                      "name": "space_name",
+                      "expression": "`space_name`"
                     },
                     {
-                      "name": "space_id_associativity",
+                      "name": "space_name_associativity",
                       "expression": "COUNT_IF(`associative_filter_predicate_group`)"
                     }
                   ],
@@ -3823,8 +3823,8 @@
               "encodings": {
                 "fields": [
                   {
-                    "fieldName": "space_id",
-                    "queryName": "dashboards/01f103a348bb14e1a13805924e97b2ff/datasets/01f103b30b7d1b14ad5a2d89b6e47b3d_space_id"
+                    "fieldName": "space_name",
+                    "queryName": "dashboards/01f103a348bb14e1a13805924e97b2ff/datasets/01f103b30b7d1b14ad5a2d89b6e47b3d_space_name"
                   },
                   {
                     "parameterName": "genie_space_id",
