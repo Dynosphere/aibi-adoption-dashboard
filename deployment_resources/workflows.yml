@@ -62,7 +62,7 @@ resources:
             - task_key: Process_Models
             - task_key: Process_ServingEndpoints
             - task_key: Process_Apps
-            - task_key: Process_genie_costs
+            - task_key: Process_dbsql_cost_per_query
             - task_key: Process_genie_observability
           notebook_task:
             notebook_path: ../src/03_update_dashboard_parameters.ipynb
