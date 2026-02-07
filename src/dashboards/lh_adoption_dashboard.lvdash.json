@@ -904,10 +904,10 @@
         "\n",
         "USE SCHEMA IDENTIFIER(:schema);\n",
         "\n",
-        "SELECT DISTINCT c.*\n",
+        "SELECT c.*\n",
         "FROM genie_cost_analysis_main_table c\n",
         "INNER JOIN genie_observability_main_table o\n",
-        "    ON c.genie_space_id = o.space_id\n",
+        "    ON c.statement_id = o.statement_id\n",
         "WHERE c.start_time >= :param.min \n",
         "  AND c.start_time <= :param.max\n",
         "  AND c.genie_space_id IS NOT NULL\n",
@@ -927,7 +927,7 @@
               "dataType": "STRING",
               "values": [
                 {
-                  "value": "kg_demo_catalog"
+                  "value": "users"
                 }
               ]
             }
@@ -942,7 +942,7 @@
               "dataType": "STRING",
               "values": [
                 {
-                  "value": "default"
+                  "value": "sam_lecorre"
                 }
               ]
             }
@@ -1035,47 +1035,24 @@
         "\n",
         "USE SCHEMA IDENTIFIER(:schema);\n",
         "\n",
-        "-- Cost per message calculation (only for common space_ids)\n",
-        "\n",
-        "WITH cost_data AS (\n",
-        "  SELECT \n",
-        "    genie_space_id,\n",
-        "    SUM(cost_usd) AS total_cost_usd\n",
-        "  FROM genie_cost_analysis_main_table\n",
-        "  WHERE start_time >= :param.min  \n",
-        "    AND start_time <= :param.max\n",
-        "    AND genie_space_id IS NOT NULL\n",
-        "    AND (\n",
-        "      :space_id = 'ALL' \n",
-        "      OR genie_space_id = :space_id\n",
-        "    )\n",
-        "  GROUP BY genie_space_id\n",
-        "),\n",
-        "message_data AS (\n",
-        "  SELECT \n",
-        "    space_id,\n",
-        "    COUNT(DISTINCT message_id) AS total_messages\n",
-        "  FROM genie_observability_main_table\n",
-        "  WHERE created_datetime >= :param.min \n",
-        "    AND created_datetime <= :param.max\n",
-        "    AND space_id IS NOT NULL\n",
-        "    AND (\n",
-        "      :space_id = 'ALL' \n",
-        "      OR space_id = :space_id\n",
-        "    )\n",
-        "  GROUP BY space_id\n",
-        ")\n",
         "SELECT \n",
-        "  c.genie_space_id AS space_id,\n",
-        "  c.total_cost_usd,\n",
-        "  m.total_messages,\n",
-        "  c.total_cost_usd / m.total_messages AS av_cost_per_message\n",
-        "FROM cost_data c\n",
-        "INNER JOIN message_data m ON c.genie_space_id = m.space_id;"
+        "  SUM(c.cost_usd) AS total_cost,\n",
+        "  COUNT(DISTINCT o.message_id) AS message_count,\n",
+        "  SUM(c.cost_usd) / COUNT(DISTINCT o.message_id) AS av_cost_per_message\n",
+        "FROM genie_cost_analysis_main_table c\n",
+        "INNER JOIN genie_observability_main_table o\n",
+        "  ON c.statement_id = o.statement_id\n",
+        "WHERE c.start_time >= :param.min \n",
+        "  AND c.start_time <= :param.max\n",
+        "  AND c.genie_space_id IS NOT NULL\n",
+        "  AND (\n",
+        "    :genie_space_id = 'ALL' \n",
+        "    OR c.genie_space_id = :genie_space_id\n",
+        "  )"
       ],
       "parameters": [
         {
-          "displayName": "catalog",
+          "displayName": "Catalog",
           "keyword": "catalog",
           "dataType": "STRING",
           "defaultSelection": {
@@ -1083,14 +1060,14 @@
               "dataType": "STRING",
               "values": [
                 {
-                  "value": "kg_demo_catalog"
+                  "value": "users"
                 }
               ]
             }
           }
         },
         {
-          "displayName": "schema",
+          "displayName": "Schema",
           "keyword": "schema",
           "dataType": "STRING",
           "defaultSelection": {
@@ -1098,32 +1075,32 @@
               "dataType": "STRING",
               "values": [
                 {
-                  "value": "default"
+                  "value": "sam_lecorre"
                 }
               ]
             }
           }
         },
         {
-          "displayName": "param",
+          "displayName": "Date Range",
           "keyword": "param",
-          "dataType": "DATE",
+          "dataType": "DATETIME",
           "complexType": "RANGE",
           "defaultSelection": {
             "range": {
-              "dataType": "DATE",
+              "dataType": "DATETIME",
               "min": {
-                "value": "2025-02-01T00:00:00.000"
+                "value": "now-30d/d"
               },
               "max": {
-                "value": "2026-02-01T23:59:59.999"
+                "value": "now/d"
               }
             }
           }
         },
         {
-          "displayName": "space_id",
-          "keyword": "space_id",
+          "displayName": "Genie Space ID",
+          "keyword": "genie_space_id",
           "dataType": "STRING",
           "defaultSelection": {
             "values": {
@@ -3767,7 +3744,7 @@
             "name": "genie-space",
             "queries": [
               {
-                "name": "dashboards/01f0fdd856f31de08b6c443a0423987d/datasets/01f0fef89db01b12aa94f510177da5cb_space_id",
+                "name": "dashboards/01f103a348bb14e1a13805924e97b2ff/datasets/01f103b30b7d1b14ad5a2d89b6e47b3d_space_id",
                 "query": {
                   "datasetName": "fe27bc16",
                   "fields": [
@@ -3784,7 +3761,7 @@
                 }
               },
               {
-                "name": "parameter_dashboards/01f0fdd856f31de08b6c443a0423987d/datasets/01f0fec1a5cb19b8ad687830223feabc_genie_space_id",
+                "name": "parameter_dashboards/01f103a348bb14e1a13805924e97b2ff/datasets/01f103b30b7d1b0db9cd1cb3a5975a58_genie_space_id",
                 "query": {
                   "datasetName": "3655f221",
                   "parameters": [
@@ -3797,7 +3774,7 @@
                 }
               },
               {
-                "name": "parameter_dashboards/01f0fdd856f31de08b6c443a0423987d/datasets/01f0fec0d6b0171bb6539cb66fba8b36_space_id",
+                "name": "parameter_dashboards/01f103a348bb14e1a13805924e97b2ff/datasets/01f103b30b7d1b06b7d3549ab7bc8d7e_space_id",
                 "query": {
                   "datasetName": "d71f04cc",
                   "parameters": [
@@ -3810,7 +3787,7 @@
                 }
               },
               {
-                "name": "parameter_dashboards/01f0fdd856f31de08b6c443a0423987d/datasets/01f0febff23c1b41846de024a3dea536_space_id",
+                "name": "parameter_dashboards/01f103a348bb14e1a13805924e97b2ff/datasets/01f103b30b7d1afb90f8395a0da8eadd_space_id",
                 "query": {
                   "datasetName": "f3e2f878",
                   "parameters": [
@@ -3823,13 +3800,13 @@
                 }
               },
               {
-                "name": "parameter_dashboards/01f0fdd856f31de08b6c443a0423987d/datasets/01f0ff0d4dfe1d959830147c0c491a7a_space_id",
+                "name": "parameter_dashboards/01f103a348bb14e1a13805924e97b2ff/datasets/01f103b30b7d1b1aa548e5533fe35e46_genie_space_id",
                 "query": {
                   "datasetName": "348e9612",
                   "parameters": [
                     {
-                      "name": "space_id",
-                      "keyword": "space_id"
+                      "name": "genie_space_id",
+                      "keyword": "genie_space_id"
                     }
                   ],
                   "disaggregated": false
@@ -3838,34 +3815,34 @@
             ],
             "spec": {
               "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Genie Space"
+              },
               "widgetType": "filter-single-select",
               "encodings": {
                 "fields": [
                   {
                     "fieldName": "space_id",
-                    "queryName": "dashboards/01f0fdd856f31de08b6c443a0423987d/datasets/01f0fef89db01b12aa94f510177da5cb_space_id"
+                    "queryName": "dashboards/01f103a348bb14e1a13805924e97b2ff/datasets/01f103b30b7d1b14ad5a2d89b6e47b3d_space_id"
                   },
                   {
                     "parameterName": "genie_space_id",
-                    "queryName": "parameter_dashboards/01f0fdd856f31de08b6c443a0423987d/datasets/01f0fec1a5cb19b8ad687830223feabc_genie_space_id"
+                    "queryName": "parameter_dashboards/01f103a348bb14e1a13805924e97b2ff/datasets/01f103b30b7d1b0db9cd1cb3a5975a58_genie_space_id"
                   },
                   {
                     "parameterName": "space_id",
-                    "queryName": "parameter_dashboards/01f0fdd856f31de08b6c443a0423987d/datasets/01f0fec0d6b0171bb6539cb66fba8b36_space_id"
+                    "queryName": "parameter_dashboards/01f103a348bb14e1a13805924e97b2ff/datasets/01f103b30b7d1b06b7d3549ab7bc8d7e_space_id"
                   },
                   {
                     "parameterName": "space_id",
-                    "queryName": "parameter_dashboards/01f0fdd856f31de08b6c443a0423987d/datasets/01f0febff23c1b41846de024a3dea536_space_id"
+                    "queryName": "parameter_dashboards/01f103a348bb14e1a13805924e97b2ff/datasets/01f103b30b7d1afb90f8395a0da8eadd_space_id"
                   },
                   {
-                    "parameterName": "space_id",
-                    "queryName": "parameter_dashboards/01f0fdd856f31de08b6c443a0423987d/datasets/01f0ff0d4dfe1d959830147c0c491a7a_space_id"
+                    "parameterName": "genie_space_id",
+                    "queryName": "parameter_dashboards/01f103a348bb14e1a13805924e97b2ff/datasets/01f103b30b7d1b1aa548e5533fe35e46_genie_space_id"
                   }
                 ]
-              },
-              "frame": {
-                "showTitle": true,
-                "title": "Genie Space"
               }
             }
           },
@@ -4940,20 +4917,24 @@
                   "datasetName": "348e9612",
                   "fields": [
                     {
-                      "name": "avg(av_cost_per_message)",
-                      "expression": "AVG(`av_cost_per_message`)"
+                      "name": "av_cost_per_message",
+                      "expression": "`av_cost_per_message`"
                     }
                   ],
-                  "disaggregated": false
+                  "disaggregated": true
                 }
               }
             ],
             "spec": {
               "version": 2,
+              "frame": {
+                "title": "Average Cost per Message (USD)",
+                "showTitle": true
+              },
               "widgetType": "counter",
               "encodings": {
                 "value": {
-                  "fieldName": "avg(av_cost_per_message)",
+                  "fieldName": "av_cost_per_message",
                   "format": {
                     "type": "number-currency",
                     "currencyCode": "USD",
@@ -4964,10 +4945,6 @@
                     }
                   }
                 }
-              },
-              "frame": {
-                "title": "Average Cost per Message (USD)",
-                "showTitle": true
               }
             }
           },
