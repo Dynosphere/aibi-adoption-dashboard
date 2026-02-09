@@ -750,7 +750,7 @@
               "dataType": "STRING",
               "values": [
                 {
-                  "value": "kg_demo_catalog"
+                  "value": "kg_test_workspace"
                 }
               ]
             }
@@ -841,7 +841,7 @@
               "dataType": "STRING",
               "values": [
                 {
-                  "value": "kg_demo_catalog"
+                  "value": "kg_test_workspace"
                 }
               ]
             }
@@ -904,17 +904,18 @@
         "\n",
         "USE SCHEMA IDENTIFIER(:schema);\n",
         "\n",
-        "SELECT c.*\n",
-        "FROM genie_cost_analysis_main_table c\n",
+        "SELECT DISTINCT\n",
+        "    c.*\n",
+        "FROM dbsql_cost_per_query_table c\n",
         "INNER JOIN genie_observability_main_table o\n",
-        "    ON c.statement_id = o.statement_id\n",
+        "    ON c.query_source_id = o.space_id\n",
         "WHERE c.start_time >= :param.min \n",
         "  AND c.start_time <= :param.max\n",
-        "  AND c.genie_space_id IS NOT NULL\n",
         "  AND (\n",
         "    :genie_space_id = 'ALL' \n",
-        "    OR c.genie_space_id = :genie_space_id\n",
-        "  )\n",
+        "    OR o.space_id = :genie_space_id\n",
+        "  );\n",
+        "\n",
         "\n"
       ],
       "parameters": [
@@ -927,7 +928,7 @@
               "dataType": "STRING",
               "values": [
                 {
-                  "value": "users"
+                  "value": "kg_test_workspace"
                 }
               ]
             }
@@ -942,7 +943,7 @@
               "dataType": "STRING",
               "values": [
                 {
-                  "value": "sam_lecorre"
+                  "value": "default"
                 }
               ]
             }
@@ -1004,7 +1005,7 @@
               "dataType": "STRING",
               "values": [
                 {
-                  "value": "kg_demo_catalog"
+                  "value": "kg_test_workspace"
                 }
               ]
             }
@@ -1036,19 +1037,30 @@
         "USE SCHEMA IDENTIFIER(:schema);\n",
         "\n",
         "SELECT \n",
-        "  SUM(c.cost_usd) AS total_cost,\n",
-        "  COUNT(DISTINCT o.message_id) AS message_count,\n",
-        "  SUM(c.cost_usd) / COUNT(DISTINCT o.message_id) AS av_cost_per_message\n",
-        "FROM genie_cost_analysis_main_table c\n",
-        "INNER JOIN genie_observability_main_table o\n",
-        "  ON c.statement_id = o.statement_id\n",
-        "WHERE c.start_time >= :param.min \n",
-        "  AND c.start_time <= :param.max\n",
-        "  AND c.genie_space_id IS NOT NULL\n",
-        "  AND (\n",
-        "    :genie_space_id = 'ALL' \n",
-        "    OR c.genie_space_id = :genie_space_id\n",
-        "  )"
+        "  SUM(c.total_space_cost) / SUM(o.total_messages) as avg_cost_per_message\n",
+        "FROM \n",
+        "  -- 1. Calculate Total Cost per Space first (No duplicates)\n",
+        "  (\n",
+        "    SELECT query_source_id, SUM(query_attributed_dollars_estimation) as total_space_cost\n",
+        "    FROM dbsql_cost_per_query_table\n",
+        "    WHERE start_time >= :param.min \n",
+        "      AND start_time <= :param.max\n",
+        "    GROUP BY query_source_id\n",
+        "  ) c\n",
+        "INNER JOIN \n",
+        "  -- 2. Calculate Total Messages per Space separately\n",
+        "  (\n",
+        "    SELECT space_id, COUNT(DISTINCT message_id) as total_messages\n",
+        "    FROM genie_observability_main_table\n",
+        "    WHERE space_id IS NOT NULL\n",
+        "      AND (\n",
+        "        :genie_space_id = 'ALL' \n",
+        "        OR space_id = :genie_space_id\n",
+        "      )\n",
+        "    GROUP BY space_id\n",
+        "  ) o\n",
+        "  -- 3. Join the pre-calculated totals\n",
+        "  ON c.query_source_id = o.space_id;\n"
       ],
       "parameters": [
         {
@@ -1060,7 +1072,7 @@
               "dataType": "STRING",
               "values": [
                 {
-                  "value": "users"
+                  "value": "kg_test_workspace"
                 }
               ]
             }
@@ -1075,7 +1087,7 @@
               "dataType": "STRING",
               "values": [
                 {
-                  "value": "sam_lecorre"
+                  "value": "default"
                 }
               ]
             }
@@ -3941,12 +3953,12 @@
                   "datasetName": "3655f221",
                   "fields": [
                     {
-                      "name": "sum(cost_usd)",
-                      "expression": "SUM(`cost_usd`)"
+                      "name": "sum(query_attributed_dollars_estimation)",
+                      "expression": "SUM(`query_attributed_dollars_estimation`)"
                     },
                     {
-                      "name": "user_email",
-                      "expression": "`user_email`"
+                      "name": "executed_by",
+                      "expression": "`executed_by`"
                     }
                   ],
                   "disaggregated": false
@@ -3955,16 +3967,20 @@
             ],
             "spec": {
               "version": 3,
+              "frame": {
+                "title": "Total Cost by User",
+                "showTitle": true
+              },
               "widgetType": "pie",
               "encodings": {
                 "angle": {
-                  "fieldName": "sum(cost_usd)",
+                  "fieldName": "sum(query_attributed_dollars_estimation)",
                   "scale": {
                     "type": "quantitative"
                   }
                 },
                 "color": {
-                  "fieldName": "user_email",
+                  "fieldName": "executed_by",
                   "displayName": "User",
                   "scale": {
                     "type": "categorical",
@@ -3979,10 +3995,6 @@
                     ]
                   }
                 }
-              },
-              "frame": {
-                "title": "Total Cost by User",
-                "showTitle": true
               }
             }
           },
@@ -4059,8 +4071,8 @@
                   "datasetName": "3655f221",
                   "fields": [
                     {
-                      "name": "sum(cost_usd)",
-                      "expression": "SUM(`cost_usd`)"
+                      "name": "sum(query_attributed_dollars_estimation)",
+                      "expression": "SUM(`query_attributed_dollars_estimation`)"
                     }
                   ],
                   "disaggregated": false
@@ -4069,10 +4081,14 @@
             ],
             "spec": {
               "version": 2,
+              "frame": {
+                "title": "Total Cost incurred (USD)",
+                "showTitle": true
+              },
               "widgetType": "counter",
               "encodings": {
                 "value": {
-                  "fieldName": "sum(cost_usd)",
+                  "fieldName": "sum(query_attributed_dollars_estimation)",
                   "format": {
                     "type": "number-currency",
                     "currencyCode": "USD",
@@ -4083,10 +4099,6 @@
                     }
                   }
                 }
-              },
-              "frame": {
-                "title": "Total Cost incurred (USD)",
-                "showTitle": true
               }
             }
           },
@@ -4917,8 +4929,8 @@
                   "datasetName": "348e9612",
                   "fields": [
                     {
-                      "name": "av_cost_per_message",
-                      "expression": "`av_cost_per_message`"
+                      "name": "avg_cost_per_message",
+                      "expression": "`avg_cost_per_message`"
                     }
                   ],
                   "disaggregated": true
@@ -4934,7 +4946,7 @@
               "widgetType": "counter",
               "encodings": {
                 "value": {
-                  "fieldName": "av_cost_per_message",
+                  "fieldName": "avg_cost_per_message",
                   "format": {
                     "type": "number-currency",
                     "currencyCode": "USD",
