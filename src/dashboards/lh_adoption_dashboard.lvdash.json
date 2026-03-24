@@ -4,10 +4,6 @@
       "name": "e2b9e81f",
       "displayName": "Dashboard_usage",
       "queryLines": [
-        "use catalog identifier(:catalog);\n",
-        "\n",
-        "use schema identifier(:schema);\n",
-        "\n",
         "select\n",
         "  * except(dashboard_name),\n",
         "  case\n",
@@ -16,48 +12,12 @@
         "  end as dashboard_name\n",
         "from\n",
         "  mvFactDashboardUsage"
-      ],
-      "parameters": [
-        {
-          "displayName": "catalog",
-          "keyword": "catalog",
-          "dataType": "STRING",
-          "defaultSelection": {
-            "values": {
-              "dataType": "STRING",
-              "values": [
-                {
-                  "value": "placeholder"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "displayName": "schema",
-          "keyword": "schema",
-          "dataType": "STRING",
-          "defaultSelection": {
-            "values": {
-              "dataType": "STRING",
-              "values": [
-                {
-                  "value": "adoption"
-                }
-              ]
-            }
-          }
-        }
       ]
     },
     {
       "name": "a5510c39",
       "displayName": "stale_dashboards",
       "queryLines": [
-        "use catalog identifier(:catalog);\n",
-        "\n",
-        "use schema identifier(:schema);\n",
-        "\n",
         "select\n",
         "  case\n",
         "    when dashboard_name rlike '.* [0-9]{4}-[0-9]{2}-[0-9]{2} .*' then 'unnamed_dashboard'\n",
@@ -70,48 +30,12 @@
         "  group by dashboard_name\n",
         "  having\n",
         "  num_views < 10"
-      ],
-      "parameters": [
-        {
-          "displayName": "catalog",
-          "keyword": "catalog",
-          "dataType": "STRING",
-          "defaultSelection": {
-            "values": {
-              "dataType": "STRING",
-              "values": [
-                {
-                  "value": "placeholder"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "displayName": "schema",
-          "keyword": "schema",
-          "dataType": "STRING",
-          "defaultSelection": {
-            "values": {
-              "dataType": "STRING",
-              "values": [
-                {
-                  "value": "adoption"
-                }
-              ]
-            }
-          }
-        }
       ]
     },
     {
       "name": "9d2c306d",
       "displayName": "ranked_dashboards",
       "queryLines": [
-        "use catalog identifier(:catalog);\n",
-        "\n",
-        "use schema identifier(:schema);\n",
-        "\n",
         "WITH weekly_views AS (\n",
         "  SELECT\n",
         "    dashboard_id,\n",
@@ -179,89 +103,19 @@
         "WHERE overall_rank <= 10 and week_0_rank < 999\n",
         "ORDER BY overall_rank\n",
         "-- \n"
-      ],
-      "parameters": [
-        {
-          "displayName": "catalog",
-          "keyword": "catalog",
-          "dataType": "STRING",
-          "defaultSelection": {
-            "values": {
-              "dataType": "STRING",
-              "values": [
-                {
-                  "value": "placeholder"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "displayName": "schema",
-          "keyword": "schema",
-          "dataType": "STRING",
-          "defaultSelection": {
-            "values": {
-              "dataType": "STRING",
-              "values": [
-                {
-                  "value": "adoption"
-                }
-              ]
-            }
-          }
-        }
       ]
     },
     {
       "name": "d51dbc00",
       "displayName": "Genie_usage",
       "queryLines": [
-        "use catalog identifier(:catalog);\n",
-        "\n",
-        "use schema identifier(:schema);\n",
         "select * from mvFactGenieUsage"
-      ],
-      "parameters": [
-        {
-          "displayName": "catalog",
-          "keyword": "catalog",
-          "dataType": "STRING",
-          "defaultSelection": {
-            "values": {
-              "dataType": "STRING",
-              "values": [
-                {
-                  "value": "kg_demo_catalog"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "displayName": "schema",
-          "keyword": "schema",
-          "dataType": "STRING",
-          "defaultSelection": {
-            "values": {
-              "dataType": "STRING",
-              "values": [
-                {
-                  "value": "default"
-                }
-              ]
-            }
-          }
-        }
       ]
     },
     {
       "name": "24976bdb",
       "displayName": "most_popular_genie",
       "queryLines": [
-        "use catalog identifier(:catalog);\n",
-        "\n",
-        "use schema identifier(:schema);\n",
         "with ranked as (\n",
         "SELECT\n",
         "  genie_space,\n",
@@ -276,45 +130,12 @@
         ")\n",
         "select genie_space, total_views, total_chats, views_rank, chats_rank from ranked where views_rank <= 10 or chats_rank <=10\n",
         "  "
-      ],
-      "parameters": [
-        {
-          "displayName": "catalog",
-          "keyword": "catalog",
-          "dataType": "STRING",
-          "defaultSelection": {
-            "values": {
-              "dataType": "STRING",
-              "values": [
-                {
-                  "value": "placeholder"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "displayName": "schema",
-          "keyword": "schema",
-          "dataType": "STRING",
-          "defaultSelection": {
-            "values": {
-              "dataType": "STRING",
-              "values": [
-                {
-                  "value": "adoption"
-                }
-              ]
-            }
-          }
-        }
       ]
     },
     {
       "name": "dcb76dbb",
       "displayName": "dashboard_users",
       "queryLines": [
-        "\n",
         "select\n",
         "  regexp_replace(user_identity.email, r'^[^.]+(?=\\.)', \"*****\") as username,\n",
         "  count(user_identity) as total_dashboard_clicks\n",
@@ -337,9 +158,6 @@
       "name": "26e7cfc1",
       "displayName": "most_least_viewed_genie",
       "queryLines": [
-        "use catalog identifier(:catalog);\n",
-        "\n",
-        "use schema identifier(:schema);\n",
         "with ranked as (\n",
         "SELECT\n",
         "  genie_space,\n",
@@ -355,45 +173,12 @@
         "select 'most_viewed' as status, * from ranked where views_rank = 1\n",
         "union all\n",
         "select 'least_viewed' as status, * from ranked where views_rank = (select max(views_rank) from ranked) limit 2"
-      ],
-      "parameters": [
-        {
-          "displayName": "catalog",
-          "keyword": "catalog",
-          "dataType": "STRING",
-          "defaultSelection": {
-            "values": {
-              "dataType": "STRING",
-              "values": [
-                {
-                  "value": "placeholder"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "displayName": "schema",
-          "keyword": "schema",
-          "dataType": "STRING",
-          "defaultSelection": {
-            "values": {
-              "dataType": "STRING",
-              "values": [
-                {
-                  "value": "adoption"
-                }
-              ]
-            }
-          }
-        }
       ]
     },
     {
       "name": "82415f2f",
       "displayName": "Genie Interactions Summary",
       "queryLines": [
-        "\n",
         "select\n",
         "  regexp_replace(user_identity.email, r'^[^.]+(?=\\.)', \"*****\") as username,\n",
         "  count(user_identity) as total_genie_interactions\n",
@@ -500,10 +285,6 @@
       "name": "f8608a63",
       "displayName": "dashboard_climbers_decliners",
       "queryLines": [
-        "use catalog identifier(:catalog);\n",
-        "\n",
-        "use schema identifier(:schema);\n",
-        "\n",
         "WITH monthly_views AS (\n",
         "  SELECT\n",
         "    dashboard_id,\n",
@@ -557,80 +338,13 @@
         "  (SELECT dashboard_name, view_diff, type, sort_order, rank FROM decliners)\n",
         ")\n",
         "ORDER BY sort_order, rank"
-      ],
-      "parameters": [
-        {
-          "displayName": "catalog",
-          "keyword": "catalog",
-          "dataType": "STRING",
-          "defaultSelection": {
-            "values": {
-              "dataType": "STRING",
-              "values": [
-                {
-                  "value": "placeholder"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "displayName": "schema",
-          "keyword": "schema",
-          "dataType": "STRING",
-          "defaultSelection": {
-            "values": {
-              "dataType": "STRING",
-              "values": [
-                {
-                  "value": "adoption"
-                }
-              ]
-            }
-          }
-        }
       ]
     },
     {
       "name": "a19ba0f5",
       "displayName": "apps_views",
       "queryLines": [
-        "use catalog identifier(:catalog);\n",
-        "\n",
-        "use schema identifier(:schema);\n",
         "select * from mvfactappusage"
-      ],
-      "parameters": [
-        {
-          "displayName": "catalog",
-          "keyword": "catalog",
-          "dataType": "STRING",
-          "defaultSelection": {
-            "values": {
-              "dataType": "STRING",
-              "values": [
-                {
-                  "value": "placeholder"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "displayName": "schema",
-          "keyword": "schema",
-          "dataType": "STRING",
-          "defaultSelection": {
-            "values": {
-              "dataType": "STRING",
-              "values": [
-                {
-                  "value": "adoption"
-                }
-              ]
-            }
-          }
-        }
       ],
       "catalog": "field_eng_slc",
       "schema": "adoption"
@@ -639,43 +353,8 @@
       "name": "75376ae2",
       "displayName": "uc_models",
       "queryLines": [
-        "use catalog identifier(:catalog);\n",
-        "\n",
-        "use schema identifier(:schema);\n",
         "select * from mvfactmodelusage;\n",
         "-- select * from mvfactservingendpointusage"
-      ],
-      "parameters": [
-        {
-          "displayName": "catalog",
-          "keyword": "catalog",
-          "dataType": "STRING",
-          "defaultSelection": {
-            "values": {
-              "dataType": "STRING",
-              "values": [
-                {
-                  "value": "placeholder"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "displayName": "schema",
-          "keyword": "schema",
-          "dataType": "STRING",
-          "defaultSelection": {
-            "values": {
-              "dataType": "STRING",
-              "values": [
-                {
-                  "value": "adoption"
-                }
-              ]
-            }
-          }
-        }
       ],
       "catalog": "field_eng_slc",
       "schema": "adoption"
@@ -684,53 +363,13 @@
       "name": "4b7165be",
       "displayName": "serving_endpoints",
       "queryLines": [
-        "use catalog identifier(:catalog);\n",
-        "\n",
-        "use schema identifier(:schema);\n",
-        "\n",
         "select * from mvFactDashboardUsage"
-      ],
-      "parameters": [
-        {
-          "displayName": "catalog",
-          "keyword": "catalog",
-          "dataType": "STRING",
-          "defaultSelection": {
-            "values": {
-              "dataType": "STRING",
-              "values": [
-                {
-                  "value": "placeholder"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "displayName": "schema",
-          "keyword": "schema",
-          "dataType": "STRING",
-          "defaultSelection": {
-            "values": {
-              "dataType": "STRING",
-              "values": [
-                {
-                  "value": "adoption"
-                }
-              ]
-            }
-          }
-        }
       ]
     },
     {
       "name": "f3e2f878",
       "displayName": "genie_drill_down_main",
       "queryLines": [
-        "USE CATALOG IDENTIFIER(:catalog);\n",
-        "\n",
-        "USE SCHEMA IDENTIFIER(:schema);\n",
-        "\n",
         "SELECT * \n",
         "FROM genie_observability_main_table\n",
         "WHERE created_datetime >= :param.min \n",
@@ -742,36 +381,6 @@
       ],
       "parameters": [
         {
-          "displayName": "catalog",
-          "keyword": "catalog",
-          "dataType": "STRING",
-          "defaultSelection": {
-            "values": {
-              "dataType": "STRING",
-              "values": [
-                {
-                  "value": "kg_test_workspace"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "displayName": "schema",
-          "keyword": "schema",
-          "dataType": "STRING",
-          "defaultSelection": {
-            "values": {
-              "dataType": "STRING",
-              "values": [
-                {
-                  "value": "default"
-                }
-              ]
-            }
-          }
-        },
-        {
           "displayName": "Time period",
           "keyword": "param",
           "dataType": "DATE",
@@ -780,10 +389,10 @@
             "range": {
               "dataType": "DATE",
               "min": {
-                "value": "2022-02-01T00:00:00.000"
+                "value": "now-90d/d"
               },
               "max": {
-                "value": "2026-02-01T23:59:59.999"
+                "value": "now/d"
               }
             }
           }
@@ -809,10 +418,6 @@
       "name": "d71f04cc",
       "displayName": "median_messages_per_conversation",
       "queryLines": [
-        "USE CATALOG IDENTIFIER(:catalog);\n",
-        "\n",
-        "USE SCHEMA IDENTIFIER(:schema);\n",
-        "\n",
         "WITH message_counts AS (\n",
         "  SELECT \n",
         "    conversation_id,\n",
@@ -833,36 +438,6 @@
       ],
       "parameters": [
         {
-          "displayName": "catalog",
-          "keyword": "catalog",
-          "dataType": "STRING",
-          "defaultSelection": {
-            "values": {
-              "dataType": "STRING",
-              "values": [
-                {
-                  "value": "kg_test_workspace"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "displayName": "schema",
-          "keyword": "schema",
-          "dataType": "STRING",
-          "defaultSelection": {
-            "values": {
-              "dataType": "STRING",
-              "values": [
-                {
-                  "value": "default"
-                }
-              ]
-            }
-          }
-        },
-        {
           "displayName": "param",
           "keyword": "param",
           "dataType": "DATE",
@@ -871,10 +446,10 @@
             "range": {
               "dataType": "DATE",
               "min": {
-                "value": "2025-01-07T00:00:00.000"
+                "value": "now-90d/d"
               },
               "max": {
-                "value": "2026-01-31T23:59:59.999"
+                "value": "now/d"
               }
             }
           }
@@ -900,10 +475,6 @@
       "name": "3655f221",
       "displayName": "genie_cost_attribution",
       "queryLines": [
-        "USE CATALOG IDENTIFIER(:catalog);\n",
-        "\n",
-        "USE SCHEMA IDENTIFIER(:schema);\n",
-        "\n",
         "SELECT DISTINCT\n",
         "    c.*\n",
         "FROM dbsql_cost_per_query_table c\n",
@@ -920,36 +491,6 @@
       ],
       "parameters": [
         {
-          "displayName": "catalog",
-          "keyword": "catalog",
-          "dataType": "STRING",
-          "defaultSelection": {
-            "values": {
-              "dataType": "STRING",
-              "values": [
-                {
-                  "value": "kg_test_workspace"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "displayName": "schema",
-          "keyword": "schema",
-          "dataType": "STRING",
-          "defaultSelection": {
-            "values": {
-              "dataType": "STRING",
-              "values": [
-                {
-                  "value": "default"
-                }
-              ]
-            }
-          }
-        },
-        {
           "displayName": "param",
           "keyword": "param",
           "dataType": "DATE",
@@ -958,10 +499,10 @@
             "range": {
               "dataType": "DATE",
               "min": {
-                "value": "2025-07-01T00:00:00.000"
+                "value": "now-90d/d"
               },
               "max": {
-                "value": "2026-02-02T23:59:59.999"
+                "value": "now/d"
               }
             }
           }
@@ -987,55 +528,15 @@
       "name": "fe27bc16",
       "displayName": "genie_space_id_filter",
       "queryLines": [
-        "USE CATALOG IDENTIFIER(:catalog);\n",
-        "\n",
-        "USE SCHEMA IDENTIFIER(:schema);\n",
-        "\n",
         "SELECT space_id, space_name \n",
         "FROM genie_observability_main_table\n",
         "\n"
-      ],
-      "parameters": [
-        {
-          "displayName": "catalog",
-          "keyword": "catalog",
-          "dataType": "STRING",
-          "defaultSelection": {
-            "values": {
-              "dataType": "STRING",
-              "values": [
-                {
-                  "value": "kg_test_workspace"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "displayName": "schema",
-          "keyword": "schema",
-          "dataType": "STRING",
-          "defaultSelection": {
-            "values": {
-              "dataType": "STRING",
-              "values": [
-                {
-                  "value": "default"
-                }
-              ]
-            }
-          }
-        }
       ]
     },
     {
       "name": "348e9612",
       "displayName": "av_cost_per_message_genie",
       "queryLines": [
-        "USE CATALOG IDENTIFIER(:catalog);\n",
-        "\n",
-        "USE SCHEMA IDENTIFIER(:schema);\n",
-        "\n",
         "SELECT \n",
         "  SUM(c.total_space_cost) / SUM(o.total_messages) as avg_cost_per_message\n",
         "FROM \n",
@@ -1063,36 +564,6 @@
         "  ON c.query_source_id = o.space_id;\n"
       ],
       "parameters": [
-        {
-          "displayName": "Catalog",
-          "keyword": "catalog",
-          "dataType": "STRING",
-          "defaultSelection": {
-            "values": {
-              "dataType": "STRING",
-              "values": [
-                {
-                  "value": "kg_test_workspace"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "displayName": "Schema",
-          "keyword": "schema",
-          "dataType": "STRING",
-          "defaultSelection": {
-            "values": {
-              "dataType": "STRING",
-              "values": [
-                {
-                  "value": "default"
-                }
-              ]
-            }
-          }
-        },
         {
           "displayName": "Date Range",
           "keyword": "param",
