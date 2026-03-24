@@ -4,6 +4,5 @@ resources:
       display_name: 'Lakehouse Adoption Dashboard'
       file_path: ../src/dashboards/lh_adoption_dashboard.lvdash.json
       warehouse_id: ${var.my_warehouse_id}
-
-
-      
+      dataset_catalog: ${var.catalog_name}
+      dataset_schema: ${var.schema_name}

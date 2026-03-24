@@ -55,28 +55,13 @@ resources:
             file:
               path: ../src/02_genie_observability_main_table.sql
             warehouse_id: ${var.my_warehouse_id}
-        - task_key: Update_dashboard_parameters
-          depends_on:
-            - task_key: Process_Genie
-            - task_key: Process_MatVews
-            - task_key: Process_Models
-            - task_key: Process_ServingEndpoints
-            - task_key: Process_Apps
-            - task_key: Process_dbsql_cost_per_query
-            - task_key: Process_genie_observability
-          notebook_task:
-            notebook_path: ../src/03_update_dashboard_parameters.ipynb
-          
-          
       queue:
         enabled: true
       parameters:
-        - name: skip_update
-          default: ${var.skip_update}
         - name: catalog_name
           default: ${var.catalog_name}
         - name: schema_name
           default: ${var.schema_name}
-        - name: deployed
-          default: true
+        - name: skip_get_conversations
+          default: ${var.skip_get_conversations}
       performance_target: PERFORMANCE_OPTIMIZED
