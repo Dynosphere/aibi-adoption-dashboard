@@ -1,7 +1,8 @@
 variables:
   my_warehouse_id:
     description: The ID of a SQL warehouse for your dashboard and pipeline
-    default: <your_warehouse_id>
+    lookup:
+      warehouse: "Serverless Starter Warehouse"
   catalog_name:
     description: The catalog containing your adoption dashboard tables
     default: users
