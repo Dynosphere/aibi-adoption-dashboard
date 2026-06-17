@@ -76,16 +76,37 @@ def sample_billing_origin_products(w: WorkspaceClient, warehouse_id: str) -> lis
 
 def main() -> int:
     w = WorkspaceClient()
-    # Use the warehouse the bundle resolves to. Fall back to the first Serverless Starter.
-    starter = next(
-        (
-            wh for wh in w.warehouses.list()
-            if wh.name == "Serverless Starter Warehouse"
-        ),
-        None,
-    )
+
+    # Pick a warehouse: prefer one named via DATABRICKS_WAREHOUSE_ID env var, then
+    # any "Serverless Starter Warehouse", then any RUNNING warehouse.
+    import os
+
+    warehouses = list(w.warehouses.list())
+    starter = None
+
+    env_id = os.getenv("DATABRICKS_WAREHOUSE_ID")
+    if env_id:
+        starter = next((wh for wh in warehouses if wh.id == env_id), None)
+
     if starter is None:
-        print("ERROR: Serverless Starter Warehouse not found in workspace.", file=sys.stderr)
+        starter = next(
+            (wh for wh in warehouses if wh.name == "Serverless Starter Warehouse"),
+            None,
+        )
+
+    if starter is None:
+        # Fall back to any RUNNING warehouse so the validation can proceed.
+        starter = next(
+            (wh for wh in warehouses if str(wh.state) == "State.RUNNING"),
+            None,
+        )
+
+    if starter is None:
+        print(
+            "ERROR: no usable warehouse found. Set DATABRICKS_WAREHOUSE_ID or "
+            "start at least one warehouse in the workspace.",
+            file=sys.stderr,
+        )
         return 1
     warehouse_id = starter.id
 
