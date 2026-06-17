@@ -1,0 +1,6 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --strict-markers"
+markers = [
+    "integration: requires live Databricks workspace (deselect with -m 'not integration')",
+]
