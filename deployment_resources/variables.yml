@@ -12,4 +12,10 @@ variables:
   skip_get_conversations:
     description: Skip pulling all conversation content via API
     default: false
-  
+  enable_genie_deep_dive:
+    description: |
+      When true, the pipeline pulls Genie conversation/message content via the
+      SDK into adb_genie_messages (slow on large workspaces). Required for the
+      Genie deep-dive panel. When false (default), the deep-dive widget renders
+      a placeholder and no SDK message fan-out runs.
+    default: false
