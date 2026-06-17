@@ -1,2 +1,3 @@
 .databricks/
 includes/config.json
+.DS_Store
