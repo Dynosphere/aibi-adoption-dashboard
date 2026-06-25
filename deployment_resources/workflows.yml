@@ -6,6 +6,9 @@ resources:
         - task_key: Ingest_Metadata
           notebook_task:
             notebook_path: ../src/01_get_metadata.ipynb
+          # Disable implicit retry — a failure here is informative, and
+          # re-running the full V2 SDK fan-out doubles wall-clock for no gain.
+          max_retries: 0
         - task_key: Process_MatVews
           depends_on:
             - task_key: Ingest_Metadata
