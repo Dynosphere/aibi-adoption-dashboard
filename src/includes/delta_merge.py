@@ -42,6 +42,16 @@ def merge_workspace_scoped(
             "df must contain workspace_id column "
             "(use includes.workspace_id.resolve())"
         )
+
+    # Coerce all-NULL (Spark `void`) columns to `string` so Delta does not
+    # reject the CREATE TABLE with DELTA_MERGE_ADD_VOID_COLUMN. We also cast
+    # the DataFrame itself so the subsequent MERGE sees a concrete type.
+    # df[c].cast(...) avoids importing pyspark.sql.functions, which keeps the
+    # helper testable without a live Spark session.
+    void_cols = [c for c in df.columns if df.schema[c].dataType.simpleString() == "void"]
+    for c in void_cols:
+        df = df.withColumn(c, df[c].cast("string"))
+
     view = f"_src_{table_fqn.replace('.', '_')}"
     df.createOrReplaceTempView(view)
     columns = ", ".join(f"{c} {df.schema[c].dataType.simpleString()}" for c in df.columns)
