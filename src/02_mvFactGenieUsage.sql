@@ -34,7 +34,7 @@ USING (
     FROM system.access.audit
     WHERE service_name IN ('aibiGenie', 'genieChat')
       AND event_date >= current_date() - INTERVAL 7 DAYS
-      AND request_params.space_id IS NOT NULL
+      AND coalesce(request_params.space_id, request_params.spaceId) IS NOT NULL
   ),
   spaces AS (
     SELECT space_id, title AS space_title, workspace_id
