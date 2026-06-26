@@ -67,4 +67,6 @@ resources:
           default: ${var.schema_name}
         - name: skip_get_conversations
           default: ${var.skip_get_conversations}
+        - name: enable_genie_deep_dive
+          default: ${var.enable_genie_deep_dive}
       performance_target: PERFORMANCE_OPTIMIZED
