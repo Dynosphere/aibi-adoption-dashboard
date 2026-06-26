@@ -4,18 +4,19 @@
 -- Window: rebuilds the last 7 days every run; older rows are stable history.
 
 CREATE TABLE IF NOT EXISTS IDENTIFIER(:catalog_name || '.' || :schema_name || '.mvFactGenieUsage') (
-  space_id          STRING,
-  space_title       STRING,
-  usage_date        DATE,
-  workspace_id      BIGINT,
-  workspace_name    STRING,
-  user_email        STRING,
-  message_count     BIGINT,
-  conversation_count BIGINT,
-  distinct_users    BIGINT,
-  surface           STRING  -- 'agents' (aibiGenie) or 'chat' (genieChat)
+  space_id          STRING COMMENT 'Genie space identifier (coalesces request_params.space_id and request_params.spaceId).',
+  space_title       STRING COMMENT 'Title of the Genie space at ingest time (from adb_genie_spaces).',
+  usage_date        DATE COMMENT 'Calendar date of the underlying audit events.',
+  workspace_id      BIGINT COMMENT 'Databricks workspace identifier; matches system.access.workspaces_latest.workspace_id.',
+  workspace_name    STRING COMMENT 'Workspace name resolved from system.access.workspaces_latest.',
+  user_email        STRING COMMENT 'Email of the user who triggered the event (from user_identity.email).',
+  message_count     BIGINT COMMENT 'Count of audit events for this (space, date, workspace, user, surface).',
+  conversation_count BIGINT COMMENT 'Distinct conversations the user participated in for this (space, date, workspace, surface).',
+  distinct_user_surfaces BIGINT COMMENT 'Count of unique (user_email, surface) pairs in this (space_id, usage_date, workspace_id) partition. NOT a count of unique users — a single user using both Genie Agents and Genie One Chat counts as 2.',
+  surface           STRING COMMENT '`agents` for Genie Agents (service_name=''aibiGenie'') or `chat` for Genie One (service_name=''genieChat'').'
 ) USING DELTA
-  PARTITIONED BY (workspace_id, surface);
+  PARTITIONED BY (workspace_id, surface)
+  COMMENT 'V3 mvFactGenieUsage. Incremental Delta table populated via MERGE from system.access.audit (service_name IN aibiGenie/genieChat). Grain: (space_id, usage_date, workspace_id, user_email, surface). Source window: last 7 days per pipeline run.';
 
 MERGE INTO IDENTIFIER(:catalog_name || '.' || :schema_name || '.mvFactGenieUsage') tgt
 USING (
@@ -64,8 +65,8 @@ USING (
     g.user_email,
     g.message_count,
     g.conversation_count,
-    -- distinct_users is per (space, date) — computed via a window after the aggregate
-    count(g.user_email) OVER (PARTITION BY g.space_id, g.usage_date, g.workspace_id) AS distinct_users,
+    -- distinct_user_surfaces: count of unique (user, surface) pairs per (space, date, workspace)
+    count(g.user_email) OVER (PARTITION BY g.space_id, g.usage_date, g.workspace_id) AS distinct_user_surfaces,
     g.surface
   FROM agg g
   LEFT JOIN spaces s ON s.space_id = g.space_id AND s.workspace_id = g.workspace_id
