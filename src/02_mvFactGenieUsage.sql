@@ -61,7 +61,7 @@ USING (
       AND coalesce(request_params.space_id, request_params.spaceId) IS NOT NULL
   ),
   spaces AS (
-    SELECT space_id, title AS space_title, workspace_id
+    SELECT space_id, name AS space_title, workspace_id
     FROM IDENTIFIER(:catalog_name || '.' || :schema_name || '.adb_genie_spaces')
   ),
   ws AS (

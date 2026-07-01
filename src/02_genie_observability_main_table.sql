@@ -75,13 +75,13 @@ USING (
       q.statement_id
     FROM events e
     LEFT JOIN system.query.history q
-      ON q.genie_space_id = e.space_id
-     AND q.workspace_id   = e.workspace_id
-     AND q.statement_start_time BETWEEN e.created_datetime - INTERVAL 5 MINUTES
-                                    AND e.created_datetime + INTERVAL 5 MINUTES
+      ON q.query_source.genie_space_id = e.space_id
+     AND q.workspace_id                = e.workspace_id
+     AND q.start_time BETWEEN e.created_datetime - INTERVAL 5 MINUTES
+                          AND e.created_datetime + INTERVAL 5 MINUTES
   ),
   with_space AS (
-    SELECT s.*, sp.title AS space_title, w.workspace_name
+    SELECT s.*, sp.name AS space_title, w.workspace_name
     FROM with_stmt s
     LEFT JOIN IDENTIFIER(:catalog_name || '.' || :schema_name || '.adb_genie_spaces') sp
       ON sp.space_id     = s.space_id
