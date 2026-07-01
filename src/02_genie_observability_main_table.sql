@@ -2,7 +2,14 @@
 -- Replaces the V2 SDK-derived view that suffered from statement_id mismatches (#14).
 -- Source: system.access.audit (service_name IN ('aibiGenie','genieChat')),
 -- joined to system.query.history on genie_space_id within a ±5 minute temporal window.
--- Window: rebuilds the last 7 days every run; older rows are stable history.
+-- Window: watermark-driven incremental read.
+--   lower bound = watermark_ts from dim_pipeline_watermarks (or TIMESTAMP '2024-01-01 00:00:00' on first run)
+--   upper bound = current_timestamp() - INTERVAL 15 MINUTES (audit ingestion lag safety)
+-- After the fact MERGE, a second MERGE advances the watermark per (source_name, workspace_id)
+-- to MAX(event_time) observed in the source window — never further than the upper bound.
+--
+-- workspace_id resolution: keyed from audit rows directly (choice G — no bundle parameter
+-- needed). Works for both single-workspace and shared-catalog multi-workspace deployments.
 
 CREATE TABLE IF NOT EXISTS IDENTIFIER(:catalog_name || '.' || :schema_name || '.genie_observability_main_table') (
   space_id          STRING  COMMENT 'Genie space identifier (coalesces request_params.space_id and request_params.spaceId).',
@@ -19,7 +26,7 @@ CREATE TABLE IF NOT EXISTS IDENTIFIER(:catalog_name || '.' || :schema_name || '.
   feedback_rating   STRING  COMMENT 'Value of request_params.feedback_rating where present.'
 ) USING DELTA
   PARTITIONED BY (workspace_id, surface)
-  COMMENT 'V3 genie_observability_main_table. Incremental Delta table populated via MERGE from system.access.audit (service_name IN aibiGenie/genieChat) joined to system.query.history.genie_space_id within ±5 minutes. Grain: (space_id, message_id, workspace_id, surface, action_name). Source window: last 7 days. Closes #14.';
+  COMMENT 'V3 genie_observability_main_table. Incremental Delta table populated via MERGE from system.access.audit (service_name IN aibiGenie/genieChat) joined to system.query.history.genie_space_id within ±5 minutes. Grain: (space_id, message_id, workspace_id, surface, action_name). Source window: watermark-driven — reads event_time > last watermark up to NOW()-15min; bootstrap epoch is 2024-01-01. Closes #14.';
 
 MERGE INTO IDENTIFIER(:catalog_name || '.' || :schema_name || '.genie_observability_main_table') tgt
 USING (
@@ -39,7 +46,23 @@ USING (
       request_params.feedback_rating                              AS feedback_rating
     FROM system.access.audit
     WHERE service_name IN ('aibiGenie', 'genieChat')
-      AND event_date >= current_date() - INTERVAL 7 DAYS
+      -- Watermark lower bound: scan the partition that contains the watermark date
+      -- (INTERVAL 1 DAY overhang guards against day-boundary clock skew).
+      AND event_date >= date(coalesce(
+            (SELECT watermark_ts
+               FROM IDENTIFIER(:catalog_name || '.' || :schema_name || '.dim_pipeline_watermarks')
+              WHERE source_name = 'genie_observability_main_table'),
+            TIMESTAMP '2024-01-01 00:00:00'
+          )) - INTERVAL 1 DAY
+      -- Watermark lower bound on the precise timestamp column.
+      AND event_time > coalesce(
+            (SELECT watermark_ts
+               FROM IDENTIFIER(:catalog_name || '.' || :schema_name || '.dim_pipeline_watermarks')
+              WHERE source_name = 'genie_observability_main_table'),
+            TIMESTAMP '2024-01-01 00:00:00'
+          )
+      -- Watermark upper bound: exclude rows that may not yet be fully ingested.
+      AND event_time <= current_timestamp() - INTERVAL 15 MINUTES
       AND request_params.message_id IS NOT NULL
   ),
   with_stmt AS (
@@ -74,4 +97,43 @@ AND tgt.workspace_id  = src.workspace_id
 AND tgt.surface       = src.surface
 AND tgt.action_name   = src.action_name
 WHEN MATCHED THEN UPDATE SET *
+WHEN NOT MATCHED THEN INSERT *;
+
+-- Advance the watermark to MAX(event_time) actually processed in the window above,
+-- grouped per workspace_id so that shared-catalog / multi-workspace deployments each
+-- get their own watermark row.  We take MAX(event_time) capped at the upper bound we
+-- used for the fact MERGE — this avoids advancing the watermark past data we didn't read.
+-- On first run, no row exists → WHEN NOT MATCHED inserts the initial watermark.
+MERGE INTO IDENTIFIER(:catalog_name || '.' || :schema_name || '.dim_pipeline_watermarks') tgt
+USING (
+  SELECT
+    'genie_observability_main_table'                             AS source_name,
+    workspace_id,
+    least(
+      max(event_time),
+      current_timestamp() - INTERVAL 15 MINUTES
+    )                                                            AS watermark_ts,
+    current_timestamp()                                          AS updated_at
+  FROM system.access.audit
+  WHERE service_name IN ('aibiGenie', 'genieChat')
+    AND event_date >= date(coalesce(
+          (SELECT watermark_ts
+             FROM IDENTIFIER(:catalog_name || '.' || :schema_name || '.dim_pipeline_watermarks')
+            WHERE source_name = 'genie_observability_main_table'),
+          TIMESTAMP '2024-01-01 00:00:00'
+        )) - INTERVAL 1 DAY
+    AND event_time > coalesce(
+          (SELECT watermark_ts
+             FROM IDENTIFIER(:catalog_name || '.' || :schema_name || '.dim_pipeline_watermarks')
+            WHERE source_name = 'genie_observability_main_table'),
+          TIMESTAMP '2024-01-01 00:00:00'
+        )
+    AND event_time <= current_timestamp() - INTERVAL 15 MINUTES
+  GROUP BY workspace_id
+) src
+ON  tgt.source_name  = src.source_name
+AND tgt.workspace_id = src.workspace_id
+WHEN MATCHED THEN UPDATE SET
+  watermark_ts = greatest(tgt.watermark_ts, src.watermark_ts),
+  updated_at   = src.updated_at
 WHEN NOT MATCHED THEN INSERT *;
