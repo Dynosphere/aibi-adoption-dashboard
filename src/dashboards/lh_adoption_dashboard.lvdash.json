@@ -597,6 +597,14 @@
           }
         }
       ]
+    },
+    {
+      "name": "mvFactGeniePaygoCost",
+      "displayName": "Genie pay-as-you-go cost",
+      "queryLines": [
+        "SELECT cost_source, usage_date, workspace_name, space_title, user_email, dbus, dollars\n",
+        "FROM mvFactGeniePaygoCost"
+      ]
     }
   ],
   "pages": [
@@ -4479,6 +4487,358 @@
         }
       ],
       "pageType": "PAGE_TYPE_CANVAS"
+    },
+    {
+      "name": "cp3-genie-cost",
+      "displayName": "Genie Cost",
+      "pageType": "dashboard",
+      "layout": [
+        {
+          "widget": {
+            "name": "genie-cost-banner",
+            "multilineTextboxSpec": {
+              "lines": [
+                "> **AI/BI Genie pay-as-you-go monitoring.** The `llm_paygo` cost column populates from **2026-07-06** when Genie Agents and Genie One move to pay-as-you-go pricing. ",
+                "Pre-go-live this view shows only SQL warehouse cost attributed to Genie Spaces (always-on). ",
+                "The 150-DBU reference line is the per-user free-credit allowance shared across Genie Agents and Genie One. ",
+                "Data sourced from `system.billing.usage` (Public Preview)."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "genie-cost-stacked-bar",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "mvFactGeniePaygoCost",
+                  "fields": [
+                    {
+                      "name": "usage_date",
+                      "expression": "`usage_date`"
+                    },
+                    {
+                      "name": "cost_source",
+                      "expression": "`cost_source`"
+                    },
+                    {
+                      "name": "sum(dollars)",
+                      "expression": "SUM(`dollars`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "usage_date",
+                  "displayName": "Date",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(dollars)",
+                  "displayName": "Cost (USD)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "cost_source",
+                  "displayName": "Cost source",
+                  "scale": {
+                    "type": "categorical",
+                    "mappings": [
+                      {
+                        "value": "warehouse",
+                        "color": "#8BCAE7"
+                      },
+                      {
+                        "value": "llm_paygo",
+                        "color": "#FFAB00"
+                      }
+                    ]
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Genie cost by day (warehouse vs pay-as-you-go)",
+                "showDescription": true,
+                "description": "Vertical marker at 2026-07-06 = pay-as-you-go go-live. The llm_paygo series populates from that date."
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 6,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "genie-cost-kpi-dbus",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "mvFactGeniePaygoCost",
+                  "fields": [
+                    {
+                      "name": "sum(dbus)",
+                      "expression": "SUM(`dbus`)"
+                    }
+                  ],
+                  "filters": [
+                    {
+                      "expression": "`usage_date` >= DATE_ADD(CURRENT_DATE(), -30)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(dbus)",
+                  "displayName": "DBUs",
+                  "format": {
+                    "type": "number",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "DBUs (30d)"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 9,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "genie-cost-kpi-dollars",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "mvFactGeniePaygoCost",
+                  "fields": [
+                    {
+                      "name": "sum(dollars)",
+                      "expression": "SUM(`dollars`)"
+                    }
+                  ],
+                  "filters": [
+                    {
+                      "expression": "`usage_date` >= DATE_ADD(CURRENT_DATE(), -30)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(dollars)",
+                  "displayName": "Dollars",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 2
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Dollars (30d)"
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 9,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "genie-cost-kpi-users",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "mvFactGeniePaygoCost",
+                  "fields": [
+                    {
+                      "name": "countdistinct(user_email)",
+                      "expression": "COUNT(DISTINCT `user_email`)"
+                    }
+                  ],
+                  "filters": [
+                    {
+                      "expression": "`usage_date` >= DATE_ADD(CURRENT_DATE(), -30)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "countdistinct(user_email)",
+                  "displayName": "Active Genie users"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Active Genie users (30d)"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 9,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "genie-cost-top-spaces",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "mvFactGeniePaygoCost",
+                  "fields": [
+                    {
+                      "name": "space_title",
+                      "expression": "`space_title`"
+                    },
+                    {
+                      "name": "sum(dbus)",
+                      "expression": "SUM(`dbus`)"
+                    },
+                    {
+                      "name": "sum(dollars)",
+                      "expression": "SUM(`dollars`)"
+                    },
+                    {
+                      "name": "countdistinct(user_email)",
+                      "expression": "COUNT(DISTINCT `user_email`)"
+                    }
+                  ],
+                  "filters": [
+                    {
+                      "expression": "`usage_date` >= DATE_ADD(CURRENT_DATE(), -30)"
+                    }
+                  ],
+                  "disaggregated": false,
+                  "orders": [
+                    {
+                      "expression": "SUM(`dollars`)",
+                      "direction": "DESC"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "space_title",
+                    "displayName": "Genie Space",
+                    "useForSearch": true
+                  },
+                  {
+                    "fieldName": "sum(dbus)",
+                    "displayName": "DBUs",
+                    "format": {
+                      "type": "number",
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
+                    }
+                  },
+                  {
+                    "fieldName": "sum(dollars)",
+                    "displayName": "Cost (USD)",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "none",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 2
+                      }
+                    }
+                  },
+                  {
+                    "fieldName": "countdistinct(user_email)",
+                    "displayName": "Active users"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Top 10 Genie Spaces by cost (30d)",
+                "showDescription": true,
+                "description": "Grouped by space title, ordered by total USD cost descending. Shows up to 10 rows."
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 12,
+            "width": 6,
+            "height": 7
+          }
+        }
+      ]
     }
   ],
   "uiSettings": {
