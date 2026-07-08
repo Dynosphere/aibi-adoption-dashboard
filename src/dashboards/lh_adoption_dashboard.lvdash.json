@@ -350,23 +350,6 @@
       "schema": "adoption"
     },
     {
-      "name": "75376ae2",
-      "displayName": "uc_models",
-      "queryLines": [
-        "select * from mvfactmodelusage;\n",
-        "-- select * from mvfactservingendpointusage"
-      ],
-      "catalog": "field_eng_slc",
-      "schema": "adoption"
-    },
-    {
-      "name": "4b7165be",
-      "displayName": "serving_endpoints",
-      "queryLines": [
-        "select * from mvFactDashboardUsage"
-      ]
-    },
-    {
       "name": "f3e2f878",
       "displayName": "genie_drill_down_main",
       "queryLines": [
@@ -604,6 +587,22 @@
       "queryLines": [
         "SELECT cost_source, usage_date, workspace_name, space_title, user_email, dbus, dollars\n",
         "FROM mvFactGeniePaygoCost"
+      ]
+    },
+    {
+      "name": "mvFactServingUsage",
+      "displayName": "Model serving usage",
+      "queryLines": [
+        "SELECT endpoint_name, entity_type, entity_name, usage_date, request_count, input_tokens, output_tokens, dbus, dollars\n",
+        "FROM mvFactServingUsage"
+      ]
+    },
+    {
+      "name": "mvFactVectorSearchCost",
+      "displayName": "Vector Search cost",
+      "queryLines": [
+        "SELECT endpoint_name, usage_date, sku_name, dbus, dollars\n",
+        "FROM mvFactVectorSearchCost"
       ]
     }
   ],
@@ -2810,21 +2809,43 @@
       "pageType": "PAGE_TYPE_CANVAS"
     },
     {
-      "name": "475d4e3a",
-      "displayName": "Models",
+      "name": "cp4-models-vs",
+      "displayName": "Models & Vector Search",
+      "pageType": "dashboard",
       "layout": [
         {
           "widget": {
-            "name": "total-views",
+            "name": "ms-vs-banner",
+            "multilineTextboxSpec": {
+              "lines": [
+                "> **Model Serving & Vector Search monitoring.** `system.serving.endpoint_usage` is in **Public Preview** and requires per-endpoint opt-in; endpoints that have not enabled usage tracking will show `request_count = 0` and zero tokens. `system.ai_gateway.usage` (Public Preview) is needed for token-level attribution across AI Gateway routes. Data sourced from `system.billing.usage` (DBU/cost) and `system.serving.endpoint_usage` (request / token counts)."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "ms-kpi-endpoints",
             "queries": [
               {
                 "name": "main_query",
                 "query": {
-                  "datasetName": "75376ae2",
+                  "datasetName": "mvFactServingUsage",
                   "fields": [
                     {
-                      "name": "sum(num_model_accesses)",
-                      "expression": "SUM(`num_model_accesses`)"
+                      "name": "countdistinct(endpoint_name)",
+                      "expression": "COUNT(DISTINCT `endpoint_name`)"
+                    }
+                  ],
+                  "filters": [
+                    {
+                      "expression": "`usage_date` >= DATE_ADD(CURRENT_DATE(), -30)"
                     }
                   ],
                   "disaggregated": false
@@ -2836,172 +2857,40 @@
               "widgetType": "counter",
               "encodings": {
                 "value": {
-                  "fieldName": "sum(num_model_accesses)"
+                  "fieldName": "countdistinct(endpoint_name)",
+                  "displayName": "Endpoints in service"
                 }
               },
               "frame": {
                 "showTitle": true,
-                "title": "Total views"
+                "title": "Endpoints in service (30d)"
               }
             }
           },
           "position": {
             "x": 0,
-            "y": 0,
-            "width": 1,
-            "height": 1
+            "y": 2,
+            "width": 2,
+            "height": 3
           }
         },
         {
           "widget": {
-            "name": "view-trends-by-workspaces",
+            "name": "ms-kpi-requests",
             "queries": [
               {
                 "name": "main_query",
                 "query": {
-                  "datasetName": "75376ae2",
+                  "datasetName": "mvFactServingUsage",
                   "fields": [
                     {
-                      "name": "workspace_name",
-                      "expression": "`workspace_name`"
-                    },
-                    {
-                      "name": "monthly(viewed_date)",
-                      "expression": "DATE_TRUNC(\"MONTH\", `viewed_date`)"
-                    },
-                    {
-                      "name": "sum(num_views)",
-                      "expression": "SUM(`num_views`)"
+                      "name": "sum(request_count)",
+                      "expression": "SUM(`request_count`)"
                     }
                   ],
-                  "disaggregated": false
-                }
-              }
-            ],
-            "spec": {
-              "version": 3,
-              "widgetType": "area",
-              "encodings": {
-                "x": {
-                  "fieldName": "monthly(viewed_date)",
-                  "displayName": "Month",
-                  "scale": {
-                    "type": "temporal"
-                  }
-                },
-                "y": {
-                  "fieldName": "sum(num_views)",
-                  "displayName": "Number of views",
-                  "scale": {
-                    "type": "quantitative"
-                  }
-                },
-                "color": {
-                  "fieldName": "workspace_name",
-                  "scale": {
-                    "type": "categorical"
-                  }
-                }
-              },
-              "frame": {
-                "showTitle": true,
-                "title": "View trends by workspaces"
-              }
-            }
-          },
-          "position": {
-            "x": 0,
-            "y": 1,
-            "width": 3,
-            "height": 6
-          }
-        },
-        {
-          "widget": {
-            "name": "model-views-by-workspace",
-            "queries": [
-              {
-                "name": "main_query",
-                "query": {
-                  "datasetName": "75376ae2",
-                  "fields": [
+                  "filters": [
                     {
-                      "name": "workspace_name",
-                      "expression": "`workspace_name`"
-                    },
-                    {
-                      "name": "sum(num_views)",
-                      "expression": "SUM(`num_views`)"
-                    },
-                    {
-                      "name": "model_name",
-                      "expression": "`model_name`"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              }
-            ],
-            "spec": {
-              "version": 3,
-              "widgetType": "bar",
-              "encodings": {
-                "x": {
-                  "fieldName": "sum(num_views)",
-                  "displayName": "Total views",
-                  "scale": {
-                    "type": "quantitative"
-                  }
-                },
-                "y": {
-                  "fieldName": "model_name",
-                  "axis": {
-                    "hideTitle": true
-                  },
-                  "displayName": "model name",
-                  "scale": {
-                    "type": "categorical",
-                    "sort": {
-                      "by": "x-reversed"
-                    }
-                  }
-                },
-                "color": {
-                  "fieldName": "workspace_name",
-                  "scale": {
-                    "type": "categorical"
-                  }
-                }
-              },
-              "frame": {
-                "showTitle": true,
-                "title": "Model views by workspace"
-              }
-            }
-          },
-          "position": {
-            "x": 3,
-            "y": 1,
-            "width": 3,
-            "height": 6
-          }
-        },
-        {
-          "widget": {
-            "name": "model-name",
-            "queries": [
-              {
-                "name": "dashboards/01f0d05a59391ad087e297c5e9c9aed5/datasets/01f0d05da6581eb7b55852603c695ee4_model_name",
-                "query": {
-                  "datasetName": "75376ae2",
-                  "fields": [
-                    {
-                      "name": "model_name",
-                      "expression": "`model_name`"
-                    },
-                    {
-                      "name": "model_name_associativity",
-                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                      "expression": "`usage_date` >= DATE_ADD(CURRENT_DATE(), -30)"
                     }
                   ],
                   "disaggregated": false
@@ -3010,69 +2899,456 @@
             ],
             "spec": {
               "version": 2,
-              "widgetType": "filter-single-select",
+              "widgetType": "counter",
               "encodings": {
-                "fields": [
+                "value": {
+                  "fieldName": "sum(request_count)",
+                  "displayName": "Total requests",
+                  "format": {
+                    "type": "number",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Total requests (30d)"
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 2,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "ms-kpi-tokens",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "mvFactServingUsage",
+                  "fields": [
+                    {
+                      "name": "sum(total_tokens)",
+                      "expression": "SUM(`input_tokens` + `output_tokens`)"
+                    }
+                  ],
+                  "filters": [
+                    {
+                      "expression": "`usage_date` >= DATE_ADD(CURRENT_DATE(), -30)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(total_tokens)",
+                  "displayName": "Total tokens (in + out)",
+                  "format": {
+                    "type": "number",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Total tokens in + out (30d)"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 2,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "ms-kpi-dbus",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "mvFactServingUsage",
+                  "fields": [
+                    {
+                      "name": "sum(dbus)",
+                      "expression": "SUM(`dbus`)"
+                    }
+                  ],
+                  "filters": [
+                    {
+                      "expression": "`usage_date` >= DATE_ADD(CURRENT_DATE(), -30)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(dbus)",
+                  "displayName": "DBUs",
+                  "format": {
+                    "type": "number",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "DBUs (30d)"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 5,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "ms-donut-entity-type",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "mvFactServingUsage",
+                  "fields": [
+                    {
+                      "name": "entity_type",
+                      "expression": "`entity_type`"
+                    },
+                    {
+                      "name": "sum(request_count)",
+                      "expression": "SUM(`request_count`)"
+                    }
+                  ],
+                  "filters": [
+                    {
+                      "expression": "`usage_date` >= DATE_ADD(CURRENT_DATE(), -30)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "sum(request_count)",
+                  "displayName": "Requests",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "entity_type",
+                  "displayName": "Entity type",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Entity-type mix by request count (30d)",
+                "showDescription": true,
+                "description": "FOUNDATION_MODEL, CUSTOM_MODEL, EXTERNAL_MODEL. Endpoints without opt-in usage tracking show zero requests."
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 5,
+            "width": 4,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "ms-table-top-endpoints",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "mvFactServingUsage",
+                  "fields": [
+                    {
+                      "name": "endpoint_name",
+                      "expression": "`endpoint_name`"
+                    },
+                    {
+                      "name": "entity_type",
+                      "expression": "`entity_type`"
+                    },
+                    {
+                      "name": "entity_name",
+                      "expression": "`entity_name`"
+                    },
+                    {
+                      "name": "sum(request_count)",
+                      "expression": "SUM(`request_count`)"
+                    },
+                    {
+                      "name": "sum(input_tokens)",
+                      "expression": "SUM(`input_tokens`)"
+                    },
+                    {
+                      "name": "sum(output_tokens)",
+                      "expression": "SUM(`output_tokens`)"
+                    },
+                    {
+                      "name": "sum(dbus)",
+                      "expression": "SUM(`dbus`)"
+                    }
+                  ],
+                  "filters": [
+                    {
+                      "expression": "`usage_date` >= DATE_ADD(CURRENT_DATE(), -30)"
+                    }
+                  ],
+                  "disaggregated": false,
+                  "orders": [
+                    {
+                      "expression": "SUM(`input_tokens`) + SUM(`output_tokens`)",
+                      "direction": "DESC"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
                   {
-                    "fieldName": "model_name",
-                    "queryName": "dashboards/01f0d05a59391ad087e297c5e9c9aed5/datasets/01f0d05da6581eb7b55852603c695ee4_model_name"
+                    "fieldName": "endpoint_name",
+                    "displayName": "Endpoint",
+                    "useForSearch": true
+                  },
+                  {
+                    "fieldName": "entity_type",
+                    "displayName": "Entity type"
+                  },
+                  {
+                    "fieldName": "entity_name",
+                    "displayName": "Model / entity"
+                  },
+                  {
+                    "fieldName": "sum(request_count)",
+                    "displayName": "Requests",
+                    "format": {
+                      "type": "number",
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 0
+                      }
+                    }
+                  },
+                  {
+                    "fieldName": "sum(input_tokens)",
+                    "displayName": "Input tokens",
+                    "format": {
+                      "type": "number",
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 0
+                      }
+                    }
+                  },
+                  {
+                    "fieldName": "sum(output_tokens)",
+                    "displayName": "Output tokens",
+                    "format": {
+                      "type": "number",
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 0
+                      }
+                    }
+                  },
+                  {
+                    "fieldName": "sum(dbus)",
+                    "displayName": "DBUs",
+                    "format": {
+                      "type": "number",
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
+                    }
                   }
                 ]
               },
               "frame": {
                 "showTitle": true,
-                "title": "Model Name"
+                "title": "Top 10 endpoints by tokens (30d)",
+                "showDescription": true,
+                "description": "Ordered by total tokens (input + output) descending. Endpoints not opted into usage tracking show zero tokens and requests."
               }
             }
           },
           "position": {
-            "x": 3,
-            "y": 0,
-            "width": 3,
-            "height": 1
+            "x": 0,
+            "y": 11,
+            "width": 6,
+            "height": 8
           }
         },
         {
           "widget": {
-            "name": "number-of-inferences",
+            "name": "ms-table-vs-cost",
             "queries": [
               {
                 "name": "main_query",
                 "query": {
-                  "datasetName": "75376ae2",
+                  "datasetName": "mvFactVectorSearchCost",
                   "fields": [
                     {
-                      "name": "num_inferences",
-                      "expression": "`num_inferences`"
+                      "name": "endpoint_name",
+                      "expression": "`endpoint_name`"
+                    },
+                    {
+                      "name": "sku_name",
+                      "expression": "`sku_name`"
+                    },
+                    {
+                      "name": "sum(dbus)",
+                      "expression": "SUM(`dbus`)"
+                    },
+                    {
+                      "name": "sum(dollars)",
+                      "expression": "SUM(`dollars`)"
                     }
                   ],
-                  "disaggregated": true
+                  "filters": [
+                    {
+                      "expression": "`usage_date` >= DATE_ADD(CURRENT_DATE(), -30)"
+                    }
+                  ],
+                  "disaggregated": false,
+                  "orders": [
+                    {
+                      "expression": "SUM(`dollars`)",
+                      "direction": "DESC"
+                    }
+                  ]
                 }
               }
             ],
             "spec": {
               "version": 2,
-              "widgetType": "counter",
+              "widgetType": "table",
               "encodings": {
-                "value": {
-                  "fieldName": "num_inferences"
-                }
+                "columns": [
+                  {
+                    "fieldName": "endpoint_name",
+                    "displayName": "VS Endpoint",
+                    "useForSearch": true
+                  },
+                  {
+                    "fieldName": "sku_name",
+                    "displayName": "SKU"
+                  },
+                  {
+                    "fieldName": "sum(dbus)",
+                    "displayName": "DBUs",
+                    "format": {
+                      "type": "number",
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
+                    }
+                  },
+                  {
+                    "fieldName": "sum(dollars)",
+                    "displayName": "Cost (USD)",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "none",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 2
+                      }
+                    }
+                  }
+                ]
               },
               "frame": {
                 "showTitle": true,
-                "title": "Number Of Inferences"
+                "title": "Vector Search endpoints \u2014 DBUs & cost by SKU (30d)",
+                "showDescription": true,
+                "description": "Cost sourced from system.billing.usage where billing_origin_product = VECTOR_SEARCH. One row per (endpoint, SKU) \u2014 a single endpoint may have both compute and storage SKUs."
               }
             }
           },
           "position": {
-            "x": 1,
-            "y": 0,
-            "width": 2,
-            "height": 1
+            "x": 0,
+            "y": 19,
+            "width": 6,
+            "height": 8
+          }
+        },
+        {
+          "widget": {
+            "name": "ms-agent-bricks-placeholder",
+            "multilineTextboxSpec": {
+              "lines": [
+                "### Agent Bricks (Knowledge Assistant, Multi-Agent Supervisor)\n",
+                "\n",
+                "Agent Bricks observability ships in a future release once\n",
+                "`system.agents.*` or UC-stored MLflow trace tables are publicly\n",
+                "available. For now, agents deployed behind a serving endpoint appear in\n",
+                "the Model Serving table above (filter `entity_type = 'CUSTOM_MODEL'`)."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 27,
+            "width": 6,
+            "height": 3
           }
         }
-      ],
-      "pageType": "PAGE_TYPE_CANVAS"
+      ]
     },
     {
       "name": "85a97342",
