@@ -89,13 +89,13 @@ USING (
     SELECT
       coalesce(a.request_params.app_id, a.request_params.name)      AS app_id,
       cast(a.event_date AS DATE)                                     AS usage_date,
-      a.workspace_id                                                 AS workspace_id,
+      cast(a.workspace_id AS BIGINT)                                 AS workspace_id,
       count(*)                                                       AS lifecycle_events,
       count(DISTINCT a.user_identity.email)                          AS distinct_users,
       max(a.event_time)                                              AS max_audit_ts
     FROM system.access.audit a
     LEFT JOIN watermark w
-      ON w.workspace_id = a.workspace_id
+      ON w.workspace_id = cast(a.workspace_id AS BIGINT)
     WHERE a.service_name = 'apps'
       AND a.event_date >= date(coalesce(w.watermark_ts, TIMESTAMP '2024-01-01 00:00:00')) - INTERVAL 1 DAY
       AND a.event_time > coalesce(w.watermark_ts, TIMESTAMP '2024-01-01 00:00:00')
@@ -168,9 +168,9 @@ USING (
         AND bu.usage_start_time <= current_timestamp() - INTERVAL 15 MINUTES
     ) b
     FULL OUTER JOIN (
-      SELECT au.workspace_id, au.event_time
+      SELECT cast(au.workspace_id AS BIGINT) AS workspace_id, au.event_time
       FROM system.access.audit au
-      LEFT JOIN watermark w ON w.workspace_id = au.workspace_id
+      LEFT JOIN watermark w ON w.workspace_id = cast(au.workspace_id AS BIGINT)
       WHERE au.service_name = 'apps'
         AND au.event_time > coalesce(w.watermark_ts, TIMESTAMP '2024-01-01 00:00:00')
         AND au.event_time <= current_timestamp() - INTERVAL 15 MINUTES

@@ -67,6 +67,13 @@ USING (
     -- + a temporal window (message-emit ± 5 minutes). This is the join that V2 got
     -- wrong (it relied on attachments.statement_id from the SDK, which silently drops
     -- statement IDs in some attachments).
+    --
+    -- QUALIFY dedup: a single audit event can match multiple query.history rows when a
+    -- busy Genie space runs several statements within the ±5-minute window. Without
+    -- dedup the MERGE fails with MERGE_DUPLICATE_MATCHES (Spark rejects multiple source
+    -- rows matching the same target key). ROW_NUMBER ordered by q.start_time picks the
+    -- nearest-in-time statement_id per (workspace_id, space_id, message_id, action_name),
+    -- keeping exactly one source row per audit event.
     SELECT
       e.*,
       q.statement_id
@@ -76,6 +83,10 @@ USING (
      AND q.workspace_id                = e.workspace_id
      AND q.start_time BETWEEN e.created_datetime - INTERVAL 5 MINUTES
                           AND e.created_datetime + INTERVAL 5 MINUTES
+    QUALIFY ROW_NUMBER() OVER (
+      PARTITION BY e.workspace_id, e.space_id, e.message_id, e.action_name
+      ORDER BY q.start_time
+    ) = 1
   ),
   with_space AS (
     SELECT s.*, sp.name AS space_title, w.workspace_name

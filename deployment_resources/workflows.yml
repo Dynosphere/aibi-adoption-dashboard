@@ -118,4 +118,6 @@ resources:
           default: ${var.skip_get_conversations}
         - name: enable_genie_deep_dive
           default: ${var.enable_genie_deep_dive}
+        - name: force_reinit
+          default: ${var.force_reinit}
       performance_target: PERFORMANCE_OPTIMIZED

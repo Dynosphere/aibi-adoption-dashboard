@@ -153,16 +153,15 @@ AND tgt.workspace_id     = src.workspace_id
 WHEN MATCHED THEN UPDATE SET *
 WHEN NOT MATCHED THEN INSERT *;
 
--- Advance the watermark to MAX(request_time) actually processed in the window above,
--- grouped per workspace_id so that shared-catalog / multi-workspace deployments each
--- get their own watermark row. Capped at the upper bound used in the fact MERGE so
--- we never advance past data we did not read.
--- On first run, no row exists for this workspace -> WHEN NOT MATCHED inserts the initial watermark.
+-- Advance the watermark using LEAST(MAX(endpoint_usage.request_time), MAX(billing.usage_start_time))
+-- capped at the upper bound — the safe minimum across both sources ensures that workspaces where
+-- endpoint_usage opt-in is disabled (the common case) still advance the watermark via billing rows,
+-- preventing a full re-scan of billing data on every run.
+-- Grouped per workspace_id so that shared-catalog / multi-workspace deployments each get their own
+-- watermark row. GREATEST() on WHEN MATCHED prevents regression.
 --
--- Watermark filter uses the same LEFT JOIN CTE pattern as the fact MERGE. The scalar
--- subquery form failed with SCALAR_SUBQUERY_TOO_MANY_ROWS on shared catalogs — see
--- commit 4ec0b12. GREATEST() on WHEN MATCHED prevents regression regardless of the
--- filter, but forward-only pre-filter still avoids unnecessary scan.
+-- Watermark filter uses the same LEFT JOIN CTE pattern as the fact MERGE (avoids
+-- SCALAR_SUBQUERY_TOO_MANY_ROWS on shared catalogs — see commit 4ec0b12).
 MERGE INTO IDENTIFIER(:catalog_name || '.' || :schema_name || '.dim_pipeline_watermarks') tgt
 USING (
   WITH watermark AS (
@@ -172,17 +171,42 @@ USING (
   )
   SELECT
     'mvFactServingUsage'                                             AS source_name,
-    cast(eu.workspace_id AS BIGINT)                                  AS workspace_id,
+    workspace_id,
     least(
-      max(eu.request_time),
+      coalesce(max_endpoint_usage_ts, current_timestamp() - INTERVAL 15 MINUTES),
+      coalesce(max_billing_ts,        current_timestamp() - INTERVAL 15 MINUTES),
       current_timestamp() - INTERVAL 15 MINUTES
     )                                                                AS watermark_ts,
     current_timestamp()                                              AS updated_at
-  FROM system.serving.endpoint_usage eu
-  LEFT JOIN watermark w ON w.workspace_id = cast(eu.workspace_id AS BIGINT)
-  WHERE eu.request_time > coalesce(w.watermark_ts, TIMESTAMP '2024-01-01 00:00:00')
-    AND eu.request_time <= current_timestamp() - INTERVAL 15 MINUTES
-  GROUP BY eu.workspace_id
+  FROM (
+    SELECT
+      coalesce(eu.workspace_id, b.workspace_id)                     AS workspace_id,
+      max(eu.max_request_time)                                       AS max_endpoint_usage_ts,
+      max(b.max_billing_ts)                                          AS max_billing_ts
+    FROM (
+      SELECT
+        cast(eu.workspace_id AS BIGINT) AS workspace_id,
+        max(eu.request_time)            AS max_request_time
+      FROM system.serving.endpoint_usage eu
+      LEFT JOIN watermark w ON w.workspace_id = cast(eu.workspace_id AS BIGINT)
+      WHERE eu.request_time > coalesce(w.watermark_ts, TIMESTAMP '2024-01-01 00:00:00')
+        AND eu.request_time <= current_timestamp() - INTERVAL 15 MINUTES
+      GROUP BY eu.workspace_id
+    ) eu
+    FULL OUTER JOIN (
+      SELECT
+        cast(bu.workspace_id AS BIGINT) AS workspace_id,
+        max(bu.usage_start_time)        AS max_billing_ts
+      FROM system.billing.usage bu
+      LEFT JOIN watermark w ON w.workspace_id = cast(bu.workspace_id AS BIGINT)
+      WHERE bu.billing_origin_product = 'MODEL_SERVING'
+        AND bu.usage_start_time > coalesce(w.watermark_ts, TIMESTAMP '2024-01-01 00:00:00')
+        AND bu.usage_start_time <= current_timestamp() - INTERVAL 15 MINUTES
+      GROUP BY bu.workspace_id
+    ) b
+    ON b.workspace_id = eu.workspace_id
+    GROUP BY coalesce(eu.workspace_id, b.workspace_id)
+  )
 ) src
 ON  tgt.source_name  = src.source_name
 AND tgt.workspace_id = src.workspace_id

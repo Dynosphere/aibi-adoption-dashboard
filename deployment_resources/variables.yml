@@ -19,3 +19,9 @@ variables:
       Genie deep-dive panel. When false (default), the deep-dive widget renders
       a placeholder and no SDK message fan-out runs.
     default: false
+  force_reinit:
+    description: |
+      When true, the metadata notebook drops all adb_* tables at the
+      start of its run and re-creates them fresh. Useful for a clean
+      rebuild or for a V2→V3 schema migration. Default false.
+    default: false

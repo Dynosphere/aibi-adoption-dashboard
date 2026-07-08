@@ -58,3 +58,4 @@ All notable changes to this project will be documented in this file.
 - Genie space attribution in the `llm_paygo` half of `mvFactGeniePaygoCost` uses `usage_metadata.endpoint_name` — will need refinement once Databricks exposes a first-class `usage_metadata.genie.space_id` field.
 - `dbu_cost = 0` for the `dashboard` asset type in `mvFactAssetAdoption` — `mvFactDashboardUsage` is audit-only with no billing cost column. A billing join is deferred to V3.1.
 - Vector Search `activity_count` is NULL in mid-2026 system tables; no QPS or latency data available yet.
+- `mvFactGeniePaygoCost` uses a 14-day rolling source window (not watermarked). Cost rows older than 14 days that were not in a prior pipeline run are permanently excluded. Symmetric watermarking of this MV is a V3.1 follow-up.
