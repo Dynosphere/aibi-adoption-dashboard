@@ -643,9 +643,462 @@
         "GROUP BY s.space_id, s.name, s.workspace_name\n",
         "HAVING max(r.created_at) < current_date() - 30 OR max(r.created_at) IS NULL"
       ]
+    },
+    {
+      "name": "mvFactAssetAdoption",
+      "displayName": "Asset adoption (cross-asset)",
+      "queryLines": [
+        "SELECT asset_id, asset_type, asset_name, usage_date, dbu_cost, activity_count\n",
+        "FROM mvFactAssetAdoption"
+      ]
     }
   ],
   "pages": [
+    {
+      "name": "cp6-adoption-overview",
+      "displayName": "Adoption Overview",
+      "layout": [
+        {
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 3
+          },
+          "widget": {
+            "name": "adoption-overview-banner",
+            "multilineTextboxSpec": {
+              "lines": [
+                "> **Adoption Overview.** Cross-asset view of AI/BI usage and cost across dashboards, Genie Agents (formerly Genie Spaces), Apps, model serving, and Vector Search. ",
+                "Sourced from  (union of the per-asset MVs). ",
+                "Note that  for dashboards is 0 (audit-only source). ",
+                "For a deep-dive on Genie cost see the Genie Cost page; for model + vector search see the Models & Vector Search page."
+              ]
+            }
+          }
+        },
+        {
+          "position": {
+            "x": 0,
+            "y": 3,
+            "width": 2,
+            "height": 3
+          },
+          "widget": {
+            "name": "adoption-kpi-dbu-cost",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "mvFactAssetAdoption",
+                  "fields": [
+                    {
+                      "name": "sum(dbu_cost)",
+                      "expression": "SUM()"
+                    }
+                  ],
+                  "filters": [
+                    {
+                      "expression": " >= DATE_ADD(CURRENT_DATE(), -30)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(dbu_cost)",
+                  "displayName": "Total DBUs",
+                  "format": {
+                    "type": "number",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Total DBUs (30d)"
+              }
+            }
+          }
+        },
+        {
+          "position": {
+            "x": 2,
+            "y": 3,
+            "width": 2,
+            "height": 3
+          },
+          "widget": {
+            "name": "adoption-kpi-activity-count",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "mvFactAssetAdoption",
+                  "fields": [
+                    {
+                      "name": "sum(activity_count)",
+                      "expression": "SUM()"
+                    }
+                  ],
+                  "filters": [
+                    {
+                      "expression": " >= DATE_ADD(CURRENT_DATE(), -30)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(activity_count)",
+                  "displayName": "Total activity events",
+                  "format": {
+                    "type": "number",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 0
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Total activity (30d)"
+              }
+            }
+          }
+        },
+        {
+          "position": {
+            "x": 4,
+            "y": 3,
+            "width": 2,
+            "height": 3
+          },
+          "widget": {
+            "name": "adoption-kpi-active-assets",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "mvFactAssetAdoption",
+                  "fields": [
+                    {
+                      "name": "countdistinct(asset_id)",
+                      "expression": "COUNT(DISTINCT )"
+                    }
+                  ],
+                  "filters": [
+                    {
+                      "expression": " >= DATE_ADD(CURRENT_DATE(), -30)"
+                    },
+                    {
+                      "expression": " > 0"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "countdistinct(asset_id)",
+                  "displayName": "Active assets"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Active assets (30d)"
+              }
+            }
+          }
+        },
+        {
+          "position": {
+            "x": 0,
+            "y": 6,
+            "width": 6,
+            "height": 7
+          },
+          "widget": {
+            "name": "adoption-stacked-bar-dbu-by-type",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "mvFactAssetAdoption",
+                  "fields": [
+                    {
+                      "name": "usage_date",
+                      "expression": ""
+                    },
+                    {
+                      "name": "asset_type",
+                      "expression": ""
+                    },
+                    {
+                      "name": "sum(dbu_cost)",
+                      "expression": "SUM()"
+                    }
+                  ],
+                  "filters": [
+                    {
+                      "expression": " >= DATE_ADD(CURRENT_DATE(), -30)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "usage_date",
+                  "displayName": "Date",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(dbu_cost)",
+                  "displayName": "DBUs",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "asset_type",
+                  "displayName": "Asset type",
+                  "scale": {
+                    "type": "categorical",
+                    "mappings": [
+                      {
+                        "value": "genie",
+                        "color": "#FFAB00"
+                      },
+                      {
+                        "value": "dashboard",
+                        "color": "#8BCAE7"
+                      },
+                      {
+                        "value": "app",
+                        "color": "#00A972"
+                      },
+                      {
+                        "value": "serving",
+                        "color": "#FF3621"
+                      },
+                      {
+                        "value": "vector_search",
+                        "color": "#AB4057"
+                      }
+                    ]
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "DBU cost by day, stacked by asset type (30d)",
+                "showDescription": true,
+                "description": "Dashboards show 0 DBUs (audit-only source). Genie Agents includes SQL warehouse cost attributed to Genie Spaces."
+              }
+            }
+          }
+        },
+        {
+          "position": {
+            "x": 0,
+            "y": 13,
+            "width": 6,
+            "height": 8
+          },
+          "widget": {
+            "name": "adoption-heatmap-activity",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "mvFactAssetAdoption",
+                  "fields": [
+                    {
+                      "name": "asset_type",
+                      "expression": ""
+                    },
+                    {
+                      "name": "usage_date",
+                      "expression": ""
+                    },
+                    {
+                      "name": "sum(activity_count)",
+                      "expression": "SUM()"
+                    }
+                  ],
+                  "filters": [
+                    {
+                      "expression": " >= DATE_ADD(CURRENT_DATE(), -30)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "heatmap",
+              "encodings": {
+                "x": {
+                  "fieldName": "usage_date",
+                  "displayName": "Date",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "asset_type",
+                  "displayName": "Asset type",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "color": {
+                  "fieldName": "sum(activity_count)",
+                  "displayName": "Activity count",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Activity count heatmap: asset type × date (30d)",
+                "showDescription": true,
+                "description": "Each cell shows total activity events for that asset type on that day. Hover for exact count."
+              }
+            }
+          }
+        },
+        {
+          "position": {
+            "x": 0,
+            "y": 21,
+            "width": 6,
+            "height": 8
+          },
+          "widget": {
+            "name": "adoption-table-top-assets",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "mvFactAssetAdoption",
+                  "fields": [
+                    {
+                      "name": "asset_type",
+                      "expression": ""
+                    },
+                    {
+                      "name": "asset_name",
+                      "expression": ""
+                    },
+                    {
+                      "name": "sum(dbu_cost)",
+                      "expression": "SUM()"
+                    },
+                    {
+                      "name": "sum(activity_count)",
+                      "expression": "SUM()"
+                    }
+                  ],
+                  "filters": [
+                    {
+                      "expression": " >= DATE_ADD(CURRENT_DATE(), -30)"
+                    }
+                  ],
+                  "disaggregated": false,
+                  "orders": [
+                    {
+                      "expression": "SUM()",
+                      "direction": "DESC"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "asset_type",
+                    "displayName": "Asset type",
+                    "useForSearch": true
+                  },
+                  {
+                    "fieldName": "asset_name",
+                    "displayName": "Asset name",
+                    "useForSearch": true
+                  },
+                  {
+                    "fieldName": "sum(dbu_cost)",
+                    "displayName": "DBU cost (30d)",
+                    "format": {
+                      "type": "number",
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
+                    }
+                  },
+                  {
+                    "fieldName": "sum(activity_count)",
+                    "displayName": "Activity events (30d)",
+                    "format": {
+                      "type": "number",
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 0
+                      }
+                    }
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Top 20 assets by DBU cost (30d)",
+                "showDescription": true,
+                "description": "Aggregated over the last 30 days, ordered by DBU cost descending. Dashboards show 0 DBU cost (audit-only source)."
+              }
+            }
+          }
+        }
+      ]
+    },
     {
       "name": "1d47bc2c",
       "displayName": "Dashboards",
@@ -3353,9 +3806,9 @@
               },
               "frame": {
                 "showTitle": true,
-                "title": "Vector Search endpoints \u2014 DBUs & cost by SKU (30d)",
+                "title": "Vector Search endpoints — DBUs & cost by SKU (30d)",
                 "showDescription": true,
-                "description": "Cost sourced from system.billing.usage where billing_origin_product = VECTOR_SEARCH. One row per (endpoint, SKU) \u2014 a single endpoint may have both compute and storage SKUs."
+                "description": "Cost sourced from system.billing.usage where billing_origin_product = VECTOR_SEARCH. One row per (endpoint, SKU) — a single endpoint may have both compute and storage SKUs."
               }
             }
           },
@@ -5166,7 +5619,7 @@
             "multilineTextboxSpec": {
               "lines": [
                 "> **User feedback** captured from `system.access.audit` (Public Preview) for Genie Agents (formerly Genie Spaces) and Genie One Chat. ",
-                "Audit data was incomplete during **2025-10-16 \u2192 2025-11-19** due to a documented Databricks-side incident."
+                "Audit data was incomplete during **2025-10-16 → 2025-11-19** due to a documented Databricks-side incident."
               ]
             }
           },
@@ -5445,7 +5898,7 @@
             "name": "quality-accuracy-banner",
             "multilineTextboxSpec": {
               "lines": [
-                "> **Genie benchmark accuracy.** Sourced from the Genie Benchmark API (Beta). Many Genie Agents do not yet have benchmarks configured \u2014 see [Test and monitor a Genie Space](https://docs.databricks.com/aws/en/genie/monitor) to add benchmarks for Genie Agents you want to monitor here. ",
+                "> **Genie benchmark accuracy.** Sourced from the Genie Benchmark API (Beta). Many Genie Agents do not yet have benchmarks configured — see [Test and monitor a Genie Space](https://docs.databricks.com/aws/en/genie/monitor) to add benchmarks for Genie Agents you want to monitor here. ",
                 "Per-question detail expires upstream at 7 days; per-run summaries are persisted in this dashboard."
               ]
             }
@@ -5524,7 +5977,7 @@
                 "showTitle": true,
                 "title": "Benchmark accuracy over time (per Genie Agent)",
                 "showDescription": true,
-                "description": "Each series is a Genie Agent (space_id). Y axis: accuracy 0\u20131. Only COMPLETED runs shown."
+                "description": "Each series is a Genie Agent (space_id). Y axis: accuracy 0–1. Only COMPLETED runs shown."
               }
             }
           },
