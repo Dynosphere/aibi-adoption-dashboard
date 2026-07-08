@@ -117,19 +117,20 @@
       "displayName": "most_popular_genie",
       "queryLines": [
         "with ranked as (\n",
-        "SELECT\n",
-        "  genie_space,\n",
-        "  SUM(num_views) AS total_views,\n",
-        "  SUM(num_chats_created) AS total_chats,\n",
-        "  RANK() OVER (ORDER BY SUM(num_views) DESC) AS views_rank,\n",
-        "  RANK() OVER (ORDER BY SUM(num_chats_created) DESC) AS chats_rank\n",
-        "FROM\n",
-        "  mvFactGenieUsage\n",
-        "GROUP BY\n",
-        "  genie_space\n",
+        "  SELECT\n",
+        "    space_title AS genie_space,\n",
+        "    SUM(message_count)      AS total_messages,\n",
+        "    SUM(conversation_count) AS total_conversations,\n",
+        "    RANK() OVER (ORDER BY SUM(message_count) DESC)      AS messages_rank,\n",
+        "    RANK() OVER (ORDER BY SUM(conversation_count) DESC) AS conversations_rank\n",
+        "  FROM mvFactGenieUsage\n",
+        "  WHERE usage_date >= current_date() - INTERVAL 30 DAYS\n",
+        "    AND space_title IS NOT NULL\n",
+        "  GROUP BY space_title\n",
         ")\n",
-        "select genie_space, total_views, total_chats, views_rank, chats_rank from ranked where views_rank <= 10 or chats_rank <=10\n",
-        "  "
+        "SELECT genie_space, total_messages, total_conversations, messages_rank, conversations_rank\n",
+        "FROM ranked\n",
+        "WHERE messages_rank <= 10 OR conversations_rank <= 10\n"
       ]
     },
     {
@@ -159,20 +160,22 @@
       "displayName": "most_least_viewed_genie",
       "queryLines": [
         "with ranked as (\n",
-        "SELECT\n",
-        "  genie_space,\n",
-        "  SUM(num_views) AS total_views,\n",
-        "  SUM(num_chats_created) AS total_chats,\n",
-        "  RANK() OVER (ORDER BY SUM(num_views) DESC) AS views_rank,\n",
-        "  RANK() OVER (ORDER BY SUM(num_chats_created) DESC) AS chats_rank\n",
-        "FROM\n",
-        "  mvFactGenieUsage\n",
-        "GROUP BY\n",
-        "  genie_space\n",
+        "  SELECT\n",
+        "    space_title AS genie_space,\n",
+        "    SUM(message_count)      AS total_messages,\n",
+        "    SUM(conversation_count) AS total_conversations,\n",
+        "    RANK() OVER (ORDER BY SUM(message_count) DESC)      AS messages_rank,\n",
+        "    RANK() OVER (ORDER BY SUM(conversation_count) DESC) AS conversations_rank\n",
+        "  FROM mvFactGenieUsage\n",
+        "  WHERE usage_date >= current_date() - INTERVAL 30 DAYS\n",
+        "    AND space_title IS NOT NULL\n",
+        "  GROUP BY space_title\n",
         ")\n",
-        "select 'most_viewed' as status, * from ranked where views_rank = 1\n",
-        "union all\n",
-        "select 'least_viewed' as status, * from ranked where views_rank = (select max(views_rank) from ranked) limit 2"
+        "SELECT 'most_used' AS status, * FROM ranked WHERE messages_rank = 1\n",
+        "UNION ALL\n",
+        "SELECT 'least_used' AS status, * FROM ranked\n",
+        "  WHERE messages_rank = (SELECT MAX(messages_rank) FROM ranked)\n",
+        "  LIMIT 2\n"
       ]
     },
     {
@@ -511,9 +514,8 @@
       "name": "fe27bc16",
       "displayName": "genie_space_id_filter",
       "queryLines": [
-        "SELECT space_id, space_name \n",
-        "FROM genie_observability_main_table\n",
-        "\n"
+        "SELECT DISTINCT space_id, space_title AS space_name\n",
+        "FROM genie_observability_main_table\n"
       ]
     },
     {
@@ -993,7 +995,7 @@
               },
               "frame": {
                 "showTitle": true,
-                "title": "Activity count heatmap: asset type × date (30d)",
+                "title": "Activity count heatmap: asset type \u00d7 date (30d)",
                 "showDescription": true,
                 "description": "Each cell shows total activity events for that asset type on that day. Hover for exact count."
               }
@@ -3806,9 +3808,9 @@
               },
               "frame": {
                 "showTitle": true,
-                "title": "Vector Search endpoints — DBUs & cost by SKU (30d)",
+                "title": "Vector Search endpoints \u2014 DBUs & cost by SKU (30d)",
                 "showDescription": true,
-                "description": "Cost sourced from system.billing.usage where billing_origin_product = VECTOR_SEARCH. One row per (endpoint, SKU) — a single endpoint may have both compute and storage SKUs."
+                "description": "Cost sourced from system.billing.usage where billing_origin_product = VECTOR_SEARCH. One row per (endpoint, SKU) \u2014 a single endpoint may have both compute and storage SKUs."
               }
             }
           },
@@ -5619,7 +5621,7 @@
             "multilineTextboxSpec": {
               "lines": [
                 "> **User feedback** captured from `system.access.audit` (Public Preview) for Genie Agents (formerly Genie Spaces) and Genie One Chat. ",
-                "Audit data was incomplete during **2025-10-16 → 2025-11-19** due to a documented Databricks-side incident."
+                "Audit data was incomplete during **2025-10-16 \u2192 2025-11-19** due to a documented Databricks-side incident."
               ]
             }
           },
@@ -5898,7 +5900,7 @@
             "name": "quality-accuracy-banner",
             "multilineTextboxSpec": {
               "lines": [
-                "> **Genie benchmark accuracy.** Sourced from the Genie Benchmark API (Beta). Many Genie Agents do not yet have benchmarks configured — see [Test and monitor a Genie Space](https://docs.databricks.com/aws/en/genie/monitor) to add benchmarks for Genie Agents you want to monitor here. ",
+                "> **Genie benchmark accuracy.** Sourced from the Genie Benchmark API (Beta). Many Genie Agents do not yet have benchmarks configured \u2014 see [Test and monitor a Genie Space](https://docs.databricks.com/aws/en/genie/monitor) to add benchmarks for Genie Agents you want to monitor here. ",
                 "Per-question detail expires upstream at 7 days; per-run summaries are persisted in this dashboard."
               ]
             }
@@ -5977,7 +5979,7 @@
                 "showTitle": true,
                 "title": "Benchmark accuracy over time (per Genie Agent)",
                 "showDescription": true,
-                "description": "Each series is a Genie Agent (space_id). Y axis: accuracy 0–1. Only COMPLETED runs shown."
+                "description": "Each series is a Genie Agent (space_id). Y axis: accuracy 0\u20131. Only COMPLETED runs shown."
               }
             }
           },
