@@ -133,8 +133,18 @@ WHEN NOT MATCHED THEN INSERT *;
 -- minimum across sources ensures that neither source is skipped if one is behind the other.
 -- Grouped per workspace_id so that shared-catalog / multi-workspace deployments each
 -- get their own watermark row. On first run, no row exists -> WHEN NOT MATCHED inserts it.
+--
+-- Watermark filter uses the same LEFT JOIN CTE pattern as the fact MERGE. The scalar
+-- subquery form failed with SCALAR_SUBQUERY_TOO_MANY_ROWS on shared catalogs — see
+-- commit 4ec0b12. GREATEST() on WHEN MATCHED prevents regression regardless of the
+-- filter, but forward-only pre-filter still avoids unnecessary scan.
 MERGE INTO IDENTIFIER(:catalog_name || '.' || :schema_name || '.dim_pipeline_watermarks') tgt
 USING (
+  WITH watermark AS (
+    SELECT workspace_id, watermark_ts
+    FROM IDENTIFIER(:catalog_name || '.' || :schema_name || '.dim_pipeline_watermarks')
+    WHERE source_name = 'mvFactAppUsage'
+  )
   SELECT
     'mvFactAppUsage'                                                 AS source_name,
     workspace_id,
@@ -150,30 +160,20 @@ USING (
       max(b.usage_start_time)                                        AS max_billing_ts,
       max(a.event_time)                                              AS max_audit_ts
     FROM (
-      SELECT cast(workspace_id AS BIGINT) AS workspace_id, usage_start_time
-      FROM system.billing.usage
-      WHERE billing_origin_product = 'APPS'
-        AND usage_start_time > coalesce(
-              (SELECT watermark_ts
-                 FROM IDENTIFIER(:catalog_name || '.' || :schema_name || '.dim_pipeline_watermarks')
-                WHERE source_name  = 'mvFactAppUsage'
-                  AND workspace_id = cast(system.billing.usage.workspace_id AS BIGINT)),
-              TIMESTAMP '2024-01-01 00:00:00'
-            )
-        AND usage_start_time <= current_timestamp() - INTERVAL 15 MINUTES
+      SELECT cast(bu.workspace_id AS BIGINT) AS workspace_id, bu.usage_start_time
+      FROM system.billing.usage bu
+      LEFT JOIN watermark w ON w.workspace_id = cast(bu.workspace_id AS BIGINT)
+      WHERE bu.billing_origin_product = 'APPS'
+        AND bu.usage_start_time > coalesce(w.watermark_ts, TIMESTAMP '2024-01-01 00:00:00')
+        AND bu.usage_start_time <= current_timestamp() - INTERVAL 15 MINUTES
     ) b
     FULL OUTER JOIN (
-      SELECT workspace_id, event_time
-      FROM system.access.audit
-      WHERE service_name = 'apps'
-        AND event_time > coalesce(
-              (SELECT watermark_ts
-                 FROM IDENTIFIER(:catalog_name || '.' || :schema_name || '.dim_pipeline_watermarks')
-                WHERE source_name  = 'mvFactAppUsage'
-                  AND workspace_id = system.access.audit.workspace_id),
-              TIMESTAMP '2024-01-01 00:00:00'
-            )
-        AND event_time <= current_timestamp() - INTERVAL 15 MINUTES
+      SELECT au.workspace_id, au.event_time
+      FROM system.access.audit au
+      LEFT JOIN watermark w ON w.workspace_id = au.workspace_id
+      WHERE au.service_name = 'apps'
+        AND au.event_time > coalesce(w.watermark_ts, TIMESTAMP '2024-01-01 00:00:00')
+        AND au.event_time <= current_timestamp() - INTERVAL 15 MINUTES
     ) a
     ON a.workspace_id = b.workspace_id
     GROUP BY coalesce(b.workspace_id, a.workspace_id)

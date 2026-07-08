@@ -103,30 +103,26 @@ WHEN NOT MATCHED THEN INSERT *;
 -- On first run, no row exists → WHEN NOT MATCHED inserts the initial watermark.
 MERGE INTO IDENTIFIER(:catalog_name || '.' || :schema_name || '.dim_pipeline_watermarks') tgt
 USING (
+  WITH watermark AS (
+    SELECT workspace_id, watermark_ts
+    FROM IDENTIFIER(:catalog_name || '.' || :schema_name || '.dim_pipeline_watermarks')
+    WHERE source_name = 'genie_observability_main_table'
+  )
   SELECT
     'genie_observability_main_table'                             AS source_name,
-    workspace_id,
+    a.workspace_id,
     least(
-      max(event_time),
+      max(a.event_time),
       current_timestamp() - INTERVAL 15 MINUTES
     )                                                            AS watermark_ts,
     current_timestamp()                                          AS updated_at
-  FROM system.access.audit
-  WHERE service_name IN ('aibiGenie', 'genieChat')
-    AND event_date >= date(coalesce(
-          (SELECT watermark_ts
-             FROM IDENTIFIER(:catalog_name || '.' || :schema_name || '.dim_pipeline_watermarks')
-            WHERE source_name = 'genie_observability_main_table'),
-          TIMESTAMP '2024-01-01 00:00:00'
-        )) - INTERVAL 1 DAY
-    AND event_time > coalesce(
-          (SELECT watermark_ts
-             FROM IDENTIFIER(:catalog_name || '.' || :schema_name || '.dim_pipeline_watermarks')
-            WHERE source_name = 'genie_observability_main_table'),
-          TIMESTAMP '2024-01-01 00:00:00'
-        )
-    AND event_time <= current_timestamp() - INTERVAL 15 MINUTES
-  GROUP BY workspace_id
+  FROM system.access.audit a
+  LEFT JOIN watermark w ON w.workspace_id = a.workspace_id
+  WHERE a.service_name IN ('aibiGenie', 'genieChat')
+    AND a.event_date >= date(coalesce(w.watermark_ts, TIMESTAMP '2024-01-01 00:00:00')) - INTERVAL 1 DAY
+    AND a.event_time > coalesce(w.watermark_ts, TIMESTAMP '2024-01-01 00:00:00')
+    AND a.event_time <= current_timestamp() - INTERVAL 15 MINUTES
+  GROUP BY a.workspace_id
 ) src
 ON  tgt.source_name  = src.source_name
 AND tgt.workspace_id = src.workspace_id

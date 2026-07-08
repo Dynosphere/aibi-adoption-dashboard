@@ -158,8 +158,18 @@ WHEN NOT MATCHED THEN INSERT *;
 -- get their own watermark row. Capped at the upper bound used in the fact MERGE so
 -- we never advance past data we did not read.
 -- On first run, no row exists for this workspace -> WHEN NOT MATCHED inserts the initial watermark.
+--
+-- Watermark filter uses the same LEFT JOIN CTE pattern as the fact MERGE. The scalar
+-- subquery form failed with SCALAR_SUBQUERY_TOO_MANY_ROWS on shared catalogs — see
+-- commit 4ec0b12. GREATEST() on WHEN MATCHED prevents regression regardless of the
+-- filter, but forward-only pre-filter still avoids unnecessary scan.
 MERGE INTO IDENTIFIER(:catalog_name || '.' || :schema_name || '.dim_pipeline_watermarks') tgt
 USING (
+  WITH watermark AS (
+    SELECT workspace_id, watermark_ts
+    FROM IDENTIFIER(:catalog_name || '.' || :schema_name || '.dim_pipeline_watermarks')
+    WHERE source_name = 'mvFactServingUsage'
+  )
   SELECT
     'mvFactServingUsage'                                             AS source_name,
     cast(eu.workspace_id AS BIGINT)                                  AS workspace_id,
@@ -169,13 +179,8 @@ USING (
     )                                                                AS watermark_ts,
     current_timestamp()                                              AS updated_at
   FROM system.serving.endpoint_usage eu
-  WHERE eu.request_time > coalesce(
-          (SELECT watermark_ts
-             FROM IDENTIFIER(:catalog_name || '.' || :schema_name || '.dim_pipeline_watermarks')
-            WHERE source_name  = 'mvFactServingUsage'
-              AND workspace_id = cast(eu.workspace_id AS BIGINT)),
-          TIMESTAMP '2024-01-01 00:00:00'
-        )
+  LEFT JOIN watermark w ON w.workspace_id = cast(eu.workspace_id AS BIGINT)
+  WHERE eu.request_time > coalesce(w.watermark_ts, TIMESTAMP '2024-01-01 00:00:00')
     AND eu.request_time <= current_timestamp() - INTERVAL 15 MINUTES
   GROUP BY eu.workspace_id
 ) src
