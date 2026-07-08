@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS IDENTIFIER(:catalog_name || '.' || :schema_name || '.
   usage_date     DATE          COMMENT 'Calendar date of the underlying usage or event record.',
   workspace_id   BIGINT        COMMENT 'Databricks workspace identifier; matches system.access.workspaces_latest.workspace_id.',
   workspace_name STRING        COMMENT 'Workspace name resolved from system.access.workspaces_latest.',
-  dbu_cost       DECIMAL(38,6) COMMENT 'Sum of DBUs consumed by the asset on this date. Zero for genie (no direct DBU column in mvFactGenieUsage; join to mvFactGeniePaygoCost for cost) and for dashboard (audit-only source). NULL is replaced with 0 for consistency.',
+  dbu_cost       DECIMAL(38,6) COMMENT 'Sum of DBUs consumed by the asset on this date. For genie: pre-aggregated sum from mvFactGeniePaygoCost (both warehouse + llm_paygo cost_source contributions). Zero for dashboard (audit-only, no billing column). NULL is replaced with 0 for consistency.',
   activity_count BIGINT        COMMENT 'Count of user-facing activities: message count for Genie, view count for dashboards, lifecycle event count for Apps, request count for Serving. NULL for vector_search (no query-rate metric available in Databricks system tables as of mid-2026).'
 ) USING DELTA
   PARTITIONED BY (workspace_id, asset_type)
@@ -54,7 +54,10 @@ USING (
   -- ── Genie ──────────────────────────────────────────────────────────────────
   -- Source grain: (space_id, usage_date, workspace_id, user_email, surface).
   -- Aggregate to (space_id, usage_date, workspace_id) for the common shape.
-  -- dbu_cost = 0 (no DBU column in mvFactGenieUsage; see table COMMENT).
+  -- dbu_cost = pre-aggregated SUM(dbus) from mvFactGeniePaygoCost joined on
+  -- (space_id, usage_date, workspace_id). Pre-aggregating first avoids
+  -- multiplying message_count by the finer paygo grain
+  -- (cost_source, user_email). Both `warehouse` and `llm_paygo` rows contribute.
   -- activity_count = sum of message_count across all user/surface combinations.
   SELECT
     'genie'                                                           AS asset_type,
@@ -63,16 +66,32 @@ USING (
     gu.usage_date                                                     AS usage_date,
     gu.workspace_id                                                   AS workspace_id,
     gu.workspace_name                                                 AS workspace_name,
-    CAST(0 AS DECIMAL(38,6))                                          AS dbu_cost,
+    CAST(coalesce(gpc.dbus, 0) AS DECIMAL(38,6))                      AS dbu_cost,
     CAST(sum(gu.message_count) AS BIGINT)                             AS activity_count
   FROM IDENTIFIER(:catalog_name || '.' || :schema_name || '.mvFactGenieUsage') gu
+  LEFT JOIN (
+    -- Pre-aggregate paygo rows to the join grain to avoid fan-out.
+    SELECT
+      space_id,
+      usage_date,
+      workspace_id,
+      sum(dbus) AS dbus
+    FROM IDENTIFIER(:catalog_name || '.' || :schema_name || '.mvFactGeniePaygoCost')
+    WHERE usage_date >= current_date() - INTERVAL 30 DAYS
+      AND space_id IS NOT NULL
+    GROUP BY space_id, usage_date, workspace_id
+  ) gpc
+    ON gpc.space_id     = gu.space_id
+    AND gpc.usage_date  = gu.usage_date
+    AND gpc.workspace_id = gu.workspace_id
   WHERE gu.usage_date >= current_date() - INTERVAL 30 DAYS
   GROUP BY
     gu.space_id,
     gu.space_title,
     gu.usage_date,
     gu.workspace_id,
-    gu.workspace_name
+    gu.workspace_name,
+    gpc.dbus
 
   UNION ALL
 
