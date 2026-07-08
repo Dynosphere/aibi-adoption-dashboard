@@ -98,6 +98,7 @@ resources:
         - task_key: Process_AssetAdoption
           depends_on:
             - task_key: Process_Genie
+            - task_key: Process_Genie_PaygoCost
             - task_key: Process_MatVews
             - task_key: Process_Apps
             - task_key: Process_ServingUsage
