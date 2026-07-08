@@ -50,6 +50,8 @@ resources:
         - task_key: Process_Apps
           depends_on:
             - task_key: Ingest_Metadata
+            - task_key: Init_Watermarks
+            - task_key: V3_Housekeeping
           sql_task:
             file:
               path: ../src/02_mvFactAppUsage.sql

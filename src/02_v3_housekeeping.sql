@@ -14,3 +14,11 @@ DROP TABLE IF EXISTS IDENTIFIER(:catalog_name || '.' || :schema_name || '.mvFact
 -- no token or cost columns) so the V3 CREATE TABLE IF NOT EXISTS would be a no-op
 -- if the old table were left in place. Drop it here so the V3 table is created fresh.
 DROP TABLE IF EXISTS IDENTIFIER(:catalog_name || '.' || :schema_name || '.mvFactServingEndpointUsage');
+
+-- mvFactAppUsage V2 used CREATE OR REPLACE TABLE ... AS SELECT with completely different
+-- columns (app_id, workspace_id, workspace_name, num_deploys, num_gets, num_updates,
+-- num_starts, num_stops, num_users, event_date) — audit-only, no billing cost, different
+-- grain and shape. The V3 schema adds dbus, dollars, lifecycle_events, distinct_users and
+-- changes the grain to (app_id, usage_date, workspace_id). Without this DROP, the V3
+-- CREATE TABLE IF NOT EXISTS would be a no-op and the MERGE would fail on missing columns.
+DROP TABLE IF EXISTS IDENTIFIER(:catalog_name || '.' || :schema_name || '.mvFactAppUsage');
