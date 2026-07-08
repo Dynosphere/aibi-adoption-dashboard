@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS IDENTIFIER(:catalog_name || '.' || :schema_name || '.
   usage_date      DATE      COMMENT 'Date of the underlying cost record.',
   workspace_id    BIGINT    COMMENT 'Databricks workspace identifier.',
   workspace_name  STRING    COMMENT 'Resolved workspace name (from system.access.workspaces_latest).',
-  space_id        STRING    COMMENT 'Genie space identifier attributed to this cost (query_source_id for warehouse rows; usage_metadata endpoint field for llm_paygo rows until schema is confirmed).',
+  space_id        STRING    COMMENT 'Genie space identifier attributed to this cost. Warehouse rows: dbsql_cost_per_query.query_source_id. llm_paygo rows: system.billing.usage.usage_metadata.endpoint_name (AI Gateway endpoint that fronts the Genie LLM call; best proxy for space attribution until Databricks exposes usage_metadata.genie.space_id).',
   space_title     STRING    COMMENT 'Genie space title from adb_genie_spaces (may be NULL for llm_paygo rows).',
   user_email      STRING    COMMENT 'Attributed user.',
   dbus            DECIMAL(38, 6) COMMENT 'Sum of DBUs for this partition.',
@@ -55,17 +55,23 @@ USING (
   -- IN ('GENIE','AI/BI_GENIE'). The IN (...) clause future-proofs the
   -- label rename. Pre-July-6 this half is empty; it populates automatically
   -- on go-live without any code change.
+  --
+  -- Schema notes (verified against system.billing.usage column list):
+  --   usage_metadata.genie          — struct with genie-specific fields
+  --     (e.g. surface: 'agents' | 'chat')
+  --   usage_metadata.endpoint_name  — top-level endpoint (post-July-6 Genie
+  --                                   is served via an AI Gateway endpoint;
+  --                                   name is our best proxy for space_id
+  --                                   until Databricks exposes a first-class
+  --                                   genie.space_id field).
+  -- Price join uses `cloud` (per go/finops reference) and `usage_start_time`
+  -- for correct daily-effective pricing.
   SELECT
     'llm_paygo'                                                    AS cost_source,
     bu.usage_date                                                  AS usage_date,
     cast(bu.workspace_id AS BIGINT)                                AS workspace_id,
     w.workspace_name                                               AS workspace_name,
-    -- Genie space attribution: usage_metadata field name is TBC post-go-live;
-    -- coalesce over both candidate paths to be tolerant of either schema shape.
-    coalesce(
-      bu.usage_metadata.ai_gateway_endpoint_name,
-      bu.usage_metadata.endpoint_name
-    )                                                              AS space_id,
+    bu.usage_metadata.endpoint_name                                AS space_id,
     cast(NULL AS STRING)                                           AS space_title,
     bu.identity_metadata.run_as                                    AS user_email,
     cast(sum(bu.usage_quantity) AS DECIMAL(38, 6))                 AS dbus,
@@ -77,9 +83,10 @@ USING (
     ON w.workspace_id = bu.workspace_id
   LEFT JOIN system.billing.list_prices p
     ON  p.sku_name       = bu.sku_name
+    AND p.cloud          = bu.cloud
     AND p.currency_code  = 'USD'
-    AND bu.usage_end_time BETWEEN p.price_start_time
-                              AND coalesce(p.price_end_time, current_timestamp())
+    AND bu.usage_start_time >= p.price_start_time
+    AND (p.price_end_time IS NULL OR bu.usage_start_time < p.price_end_time)
   WHERE bu.billing_origin_product IN ('GENIE', 'AI/BI_GENIE')
     AND bu.usage_date >= current_date() - INTERVAL 14 DAYS
   GROUP BY ALL

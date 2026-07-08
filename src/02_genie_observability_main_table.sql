@@ -30,40 +30,37 @@ CREATE TABLE IF NOT EXISTS IDENTIFIER(:catalog_name || '.' || :schema_name || '.
 
 MERGE INTO IDENTIFIER(:catalog_name || '.' || :schema_name || '.genie_observability_main_table') tgt
 USING (
-  WITH events AS (
+  WITH watermark AS (
+    -- Per-workspace watermarks for this source. Left-joined into audit so a
+    -- workspace with no prior watermark row falls back to the epoch. Fixes
+    -- SCALAR_SUBQUERY_TOO_MANY_ROWS on shared-catalog deployments where
+    -- multiple workspaces write watermarks for the same source_name.
+    SELECT workspace_id, watermark_ts
+    FROM IDENTIFIER(:catalog_name || '.' || :schema_name || '.dim_pipeline_watermarks')
+    WHERE source_name = 'genie_observability_main_table'
+  ),
+  events AS (
     SELECT
-      coalesce(request_params.space_id, request_params.spaceId)  AS space_id,
-      request_params.conversation_id                              AS conversation_id,
-      request_params.message_id                                   AS message_id,
-      user_identity.email                                         AS user_email,
-      event_time                                                  AS created_datetime,
-      workspace_id,
-      CASE service_name
+      coalesce(a.request_params.space_id, a.request_params.spaceId) AS space_id,
+      a.request_params.conversation_id                              AS conversation_id,
+      a.request_params.message_id                                   AS message_id,
+      a.user_identity.email                                         AS user_email,
+      a.event_time                                                  AS created_datetime,
+      a.workspace_id,
+      CASE a.service_name
         WHEN 'aibiGenie' THEN 'agents'
         WHEN 'genieChat' THEN 'chat'
-      END                                                         AS surface,
-      action_name,
-      request_params.feedback_rating                              AS feedback_rating
-    FROM system.access.audit
-    WHERE service_name IN ('aibiGenie', 'genieChat')
-      -- Watermark lower bound: scan the partition that contains the watermark date
-      -- (INTERVAL 1 DAY overhang guards against day-boundary clock skew).
-      AND event_date >= date(coalesce(
-            (SELECT watermark_ts
-               FROM IDENTIFIER(:catalog_name || '.' || :schema_name || '.dim_pipeline_watermarks')
-              WHERE source_name = 'genie_observability_main_table'),
-            TIMESTAMP '2024-01-01 00:00:00'
-          )) - INTERVAL 1 DAY
-      -- Watermark lower bound on the precise timestamp column.
-      AND event_time > coalesce(
-            (SELECT watermark_ts
-               FROM IDENTIFIER(:catalog_name || '.' || :schema_name || '.dim_pipeline_watermarks')
-              WHERE source_name = 'genie_observability_main_table'),
-            TIMESTAMP '2024-01-01 00:00:00'
-          )
-      -- Watermark upper bound: exclude rows that may not yet be fully ingested.
-      AND event_time <= current_timestamp() - INTERVAL 15 MINUTES
-      AND request_params.message_id IS NOT NULL
+      END                                                           AS surface,
+      a.action_name,
+      a.request_params.feedback_rating                              AS feedback_rating
+    FROM system.access.audit a
+    LEFT JOIN watermark w
+      ON w.workspace_id = a.workspace_id
+    WHERE a.service_name IN ('aibiGenie', 'genieChat')
+      AND a.event_date >= date(coalesce(w.watermark_ts, TIMESTAMP '2024-01-01 00:00:00')) - INTERVAL 1 DAY
+      AND a.event_time > coalesce(w.watermark_ts, TIMESTAMP '2024-01-01 00:00:00')
+      AND a.event_time <= current_timestamp() - INTERVAL 15 MINUTES
+      AND a.request_params.message_id IS NOT NULL
   ),
   with_stmt AS (
     -- Join message-level events to executed SQL via system.query.history.genie_space_id
