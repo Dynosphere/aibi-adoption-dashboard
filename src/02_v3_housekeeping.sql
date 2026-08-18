@@ -22,3 +22,10 @@ DROP TABLE IF EXISTS IDENTIFIER(:catalog_name || '.' || :schema_name || '.mvFact
 -- changes the grain to (app_id, usage_date, workspace_id). Without this DROP, the V3
 -- CREATE TABLE IF NOT EXISTS would be a no-op and the MERGE would fail on missing columns.
 DROP TABLE IF EXISTS IDENTIFIER(:catalog_name || '.' || :schema_name || '.mvFactAppUsage');
+
+-- genie_observability_main_table V2 was SDK-message-derived (user_question, ai_response,
+-- sql_query, attachments.statement_id, …) and is the root cause of #14. V3 rebuilds it from
+-- system.access.audit + system.query.history.genie_space_id with a different schema
+-- (workspace_id, surface, action_name, space_title; no SDK message body columns). Without
+-- this DROP, CREATE TABLE IF NOT EXISTS is a no-op and the V3 MERGE fails / never lands.
+DROP TABLE IF EXISTS IDENTIFIER(:catalog_name || '.' || :schema_name || '.genie_observability_main_table');

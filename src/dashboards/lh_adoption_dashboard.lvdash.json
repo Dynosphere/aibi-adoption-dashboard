@@ -407,7 +407,7 @@
         "WITH message_counts AS (\n",
         "  SELECT \n",
         "    conversation_id,\n",
-        "    COUNT(*) AS message_count\n",
+        "    COUNT(DISTINCT message_id) AS message_count\n",
         "  FROM genie_observability_main_table\n",
         "  WHERE created_datetime >= :param.min \n",
         "    AND created_datetime <= :param.max\n",

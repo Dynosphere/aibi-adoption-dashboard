@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS IDENTIFIER(:catalog_name || '.' || :schema_name || '.
   space_title       STRING  COMMENT 'Title of the Genie space at ingest time (from adb_genie_spaces).',
   conversation_id   STRING  COMMENT 'Conversation identifier from request_params.conversation_id.',
   message_id        STRING  COMMENT 'Message identifier from request_params.message_id.',
-  statement_id      STRING  COMMENT 'SQL warehouse statement_id from system.query.history, joined within ±5 min of the audit event. Resolves issue #14 (V2 SDK-attachment join silently dropped statement_ids).',
+  statement_id      STRING  COMMENT 'SQL warehouse statement_id from system.query.history, joined within ±5 min of the audit event. Part of the grain: a message fanning out to N statements produces N rows. NULL when no statement ran in the window. Resolves issue #14 (V2 SDK-attachment join silently dropped statement_ids).',
   user_email        STRING  COMMENT 'Email of the user who triggered the event (from user_identity.email).',
   created_datetime  TIMESTAMP COMMENT 'Timestamp of the audit event (event_time).',
   workspace_id      BIGINT  COMMENT 'Databricks workspace identifier.',
@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS IDENTIFIER(:catalog_name || '.' || :schema_name || '.
   feedback_rating   STRING  COMMENT 'Value of request_params.feedback_rating where present.'
 ) USING DELTA
   PARTITIONED BY (workspace_id, surface)
-  COMMENT 'V3 genie_observability_main_table. Incremental Delta table populated via MERGE from system.access.audit (service_name IN aibiGenie/genieChat) joined to system.query.history.genie_space_id within ±5 minutes. Grain: (space_id, message_id, workspace_id, surface, action_name). Source window: watermark-driven — reads event_time > last watermark up to NOW()-15min; bootstrap epoch is 2024-01-01. Closes #14.';
+  COMMENT 'V3 genie_observability_main_table. Incremental Delta table populated via MERGE from system.access.audit (service_name IN aibiGenie/genieChat) joined to system.query.history.genie_space_id within ±5 minutes. Grain: (space_id, message_id, workspace_id, surface, action_name, statement_id) — one row per statement, since a Genie message typically fans out to several statements. Source window: watermark-driven — reads event_time > last watermark up to NOW()-15min; bootstrap epoch is 2024-01-01. Known gap: statements from space-level activity that emits no message_id (e.g. genieUpdateSpace sample runs) are not represented. Closes #14.';
 
 MERGE INTO IDENTIFIER(:catalog_name || '.' || :schema_name || '.genie_observability_main_table') tgt
 USING (
@@ -68,24 +68,48 @@ USING (
     -- wrong (it relied on attachments.statement_id from the SDK, which silently drops
     -- statement IDs in some attachments).
     --
-    -- QUALIFY dedup: a single audit event can match multiple query.history rows when a
-    -- busy Genie space runs several statements within the ±5-minute window. Without
-    -- dedup the MERGE fails with MERGE_DUPLICATE_MATCHES (Spark rejects multiple source
-    -- rows matching the same target key). ROW_NUMBER ordered by q.start_time picks the
-    -- nearest-in-time statement_id per (workspace_id, space_id, message_id, action_name),
-    -- keeping exactly one source row per audit event.
+    -- A Genie message fans out to several statements (metadata probes, the answer query,
+    -- sample-data reads) — measured at ~7 per message — so statement_id belongs in the
+    -- grain. But the window join is many-to-many: every audit event in a busy space sees
+    -- every statement within ±5 min, and the audit log re-emits the same (message_id,
+    -- action_name) on each client poll. Taking the raw join would multiply each statement
+    -- across ~12 unrelated message events and break MERGE with MERGE_DUPLICATE_MATCHES.
+    --
+    -- Two ranks collapse that cross product from both directions:
+    --   stmt_rank — binds each statement to its single nearest-in-time message event, so
+    --               a statement is attributed exactly once and cost joins cannot fan out.
+    --   msg_rank  — keeps each (message, action) even when its statements were claimed by
+    --               a nearer message, so message- and user-level counts stay complete.
+    -- The trailing QUALIFY guarantees one source row per MERGE key after the union of the
+    -- two, since repeated audit polls can otherwise satisfy both ranks for the same key.
     SELECT
-      e.*,
-      q.statement_id
-    FROM events e
-    LEFT JOIN system.query.history q
-      ON q.query_source.genie_space_id = e.space_id
-     AND q.workspace_id                = e.workspace_id
-     AND q.start_time BETWEEN e.created_datetime - INTERVAL 5 MINUTES
-                          AND e.created_datetime + INTERVAL 5 MINUTES
+      space_id, conversation_id, message_id, user_email, created_datetime,
+      workspace_id, surface, action_name, feedback_rating, statement_id
+    FROM (
+      SELECT
+        e.*,
+        q.statement_id,
+        ROW_NUMBER() OVER (
+          PARTITION BY e.workspace_id, e.space_id, q.statement_id
+          ORDER BY abs(unix_timestamp(q.start_time) - unix_timestamp(e.created_datetime)),
+                   e.created_datetime
+        ) AS stmt_rank,
+        ROW_NUMBER() OVER (
+          PARTITION BY e.workspace_id, e.space_id, e.message_id, e.action_name
+          ORDER BY abs(unix_timestamp(q.start_time) - unix_timestamp(e.created_datetime)),
+                   e.created_datetime
+        ) AS msg_rank
+      FROM events e
+      LEFT JOIN system.query.history q
+        ON q.query_source.genie_space_id = e.space_id
+       AND q.workspace_id                = e.workspace_id
+       AND q.start_time BETWEEN e.created_datetime - INTERVAL 5 MINUTES
+                            AND e.created_datetime + INTERVAL 5 MINUTES
+    )
+    WHERE stmt_rank = 1 OR msg_rank = 1
     QUALIFY ROW_NUMBER() OVER (
-      PARTITION BY e.workspace_id, e.space_id, e.message_id, e.action_name
-      ORDER BY q.start_time
+      PARTITION BY workspace_id, space_id, message_id, action_name, statement_id
+      ORDER BY created_datetime
     ) = 1
   ),
   with_space AS (
@@ -104,6 +128,9 @@ AND tgt.message_id    = src.message_id
 AND tgt.workspace_id  = src.workspace_id
 AND tgt.surface       = src.surface
 AND tgt.action_name   = src.action_name
+-- Null-safe: statement_id is NULL when an audit event has no statement in its window.
+-- Plain equality would never match those rows and would re-insert them on every run.
+AND tgt.statement_id <=> src.statement_id
 WHEN MATCHED THEN UPDATE SET *
 WHEN NOT MATCHED THEN INSERT *;
 
