@@ -190,6 +190,47 @@ tier / sku / day`.
   disabled on the test workspace. Confirm statement/message capture once a
   workspace with the Responses API + deep-research enabled is available.
 
+### Optimisation avenues
+
+The ingest (`01_get_metadata.ipynb`) is a nested API fan-out with no redundant
+calls — each space, conversation, message and unique user is fetched exactly
+once (user-email lookups are cached in `USER_CACHE`, and cell 11 reuses the
+in-memory `messages` list rather than re-fetching).
+
+**Implemented** (previously the ingest could take *hours* on a busy workspace;
+the comment fan-out was the long pole in `Ingest_Metadata`):
+
+- **Comments are only fetched for messages that have feedback.** Cell 11 filters
+  to `feedback_rating != 'NONE'` before calling `GET .../messages/{id}/comments`.
+  A comment / thumbs-down reason cannot exist without a rating, so this removes
+  ~90%+ of the calls on a typical workspace with zero loss of coverage.
+- **Every independent per-item REST loop now fans out over a shared bounded
+  thread pool** (`parallel_map`, defined in the imports cell) instead of looping
+  serially. This covers the Genie conversation fetch, the message fetch, the
+  comment fetch, dashboard schedules, dashboard subscriptions, and the
+  `get_permissions` lookups for models / serving endpoints / apps — i.e. all of
+  the round-trip-bound work. Genie list endpoints are throttled tighter, so those
+  fan-outs use `GENIE_MAX_WORKERS=8`; the Permissions API tolerates the default 8.
+  Per-item errors are collected, not raised, so one 403/404 never aborts a batch.
+  Lower the worker counts if you hit API rate limits.
+
+Levers today: `enable_genie_feedback_comments=false` skips comments entirely;
+`skip_get_conversations=true` skips messages+comments.
+
+**Still open (larger, architectural — see the V3 branch for reference
+implementations in `src/includes/`):**
+
+- **Incremental ingest via watermarks.** The notebook drops and rebuilds all
+  tables each run, and the `02_*.sql` MVs re-scan a 180-day `system.*` window
+  every invocation. A `dim_pipeline_watermarks` table (one row per
+  `source × workspace_id`, tracking the highest `event_time` processed) lets each
+  run read only new rows. Biggest remaining lever on large metastores — this is
+  SQL/Photon compute cost, not API cost.
+- **Idempotent `MERGE` instead of drop-and-overwrite.** Switching the writes from
+  `mode("overwrite")` to a workspace-scoped `MERGE` (keyed on the natural key +
+  `workspace_id`) makes reruns idempotent, avoids full table rewrites, and lets
+  two deployments safely share one catalog without clobbering each other's rows.
+
 ⸻
 
 ## Requirements
