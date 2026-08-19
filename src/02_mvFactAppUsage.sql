@@ -39,7 +39,7 @@ WITH
   billing_agg AS (
     SELECT
       bu.usage_metadata.app_id                                       AS app_id,
-      bu.usage_metadata.app_name                                     AS app_name,
+      any_value(bu.usage_metadata.app_name)                          AS app_name,
       bu.usage_date                                                  AS usage_date,
       cast(bu.workspace_id AS BIGINT)                                AS workspace_id,
       cast(sum(bu.usage_quantity) AS DECIMAL(38,6))                  AS dbus,
@@ -55,7 +55,7 @@ WITH
     WHERE bu.billing_origin_product = 'APPS'
       AND bu.usage_metadata.app_id IS NOT NULL
       AND bu.usage_start_time >= date_sub(current_date(), :lookback_days)
-    GROUP BY ALL
+    GROUP BY app_id, usage_date, workspace_id
   ),
 
   -- Aggregate audit lifecycle event counts from system.access.audit for Apps rows.

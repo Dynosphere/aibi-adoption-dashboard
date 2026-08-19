@@ -82,4 +82,6 @@ resources:
           default: ${var.skip_get_conversations}
         - name: enable_genie_feedback_comments
           default: ${var.enable_genie_feedback_comments}
+        - name: lookback_days
+          default: ${var.lookback_days}
       performance_target: PERFORMANCE_OPTIMIZED

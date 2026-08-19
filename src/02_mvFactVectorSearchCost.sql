@@ -21,10 +21,10 @@ CREATE OR REPLACE TABLE IDENTIFIER(:catalog_name || '.' || :schema_name || '.mvF
 INSERT OVERWRITE IDENTIFIER(:catalog_name || '.' || :schema_name || '.mvFactVectorSearchCost')
 SELECT
   bu.usage_metadata.endpoint_id                                    AS endpoint_id,
-  bu.usage_metadata.endpoint_name                                  AS endpoint_name,
+  any_value(bu.usage_metadata.endpoint_name)                       AS endpoint_name,
   bu.usage_date                                                    AS usage_date,
   cast(bu.workspace_id AS BIGINT)                                  AS workspace_id,
-  w.workspace_name                                                 AS workspace_name,
+  any_value(w.workspace_name)                                      AS workspace_name,
   bu.sku_name                                                      AS sku_name,
   cast(sum(bu.usage_quantity) AS DECIMAL(38, 6))                   AS dbus,
   cast(sum(bu.usage_quantity * coalesce(p.pricing.effective_list.default, 0))
@@ -40,4 +40,4 @@ LEFT JOIN system.billing.list_prices p
   AND (p.price_end_time IS NULL OR bu.usage_start_time < p.price_end_time)
 WHERE bu.billing_origin_product = 'VECTOR_SEARCH'
   AND bu.usage_start_time >= date_sub(current_date(), :lookback_days)
-GROUP BY ALL;
+GROUP BY endpoint_id, usage_date, workspace_id, sku_name;
