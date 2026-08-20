@@ -11,3 +11,11 @@ FROM (
 SELECT assert_true(count(*) = 0, 'dbus/dollars must be non-negative') AS nonneg_ok
 FROM IDENTIFIER(:catalog_name || '.' || :schema_name || '.mvFactVectorSearchCost')
 WHERE dbus < 0 OR dollars < 0;
+
+-- endpoint_name must never be NULL: some VECTOR_SEARCH billing lines (index-maintenance
+-- ENTERPRISE_JOBS_SERVERLESS_COMPUTE SKUs) carry real cost but no endpoint_id/endpoint_name.
+-- These are kept (totals must still reconcile to billing) and labelled as unattributed
+-- rather than surfacing as a NULL bucket in the dashboard.
+SELECT assert_true(count(*) = 0, 'endpoint_name must never be NULL (unattributed rows labelled)') AS name_ok
+FROM IDENTIFIER(:catalog_name || '.' || :schema_name || '.mvFactVectorSearchCost')
+WHERE endpoint_name IS NULL;
