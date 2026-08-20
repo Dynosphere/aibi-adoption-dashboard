@@ -4,6 +4,13 @@
 -- Grain: (endpoint_id, usage_date, workspace_id, sku_name). sku_name is in the grain
 -- because a single endpoint can emit compute and storage SKUs on the same day.
 -- Note: QPS/latency are not in system tables as of mid-2026; cost only.
+--
+-- Unattributed cost: some VECTOR_SEARCH billing lines carry real DBUs but no
+-- usage_metadata.endpoint_id/endpoint_name — in practice the background index-maintenance
+-- SKU (ENTERPRISE_JOBS_SERVERLESS_COMPUTE_*). These rows are KEPT (so the fact still
+-- reconciles exactly to system.billing.usage) and endpoint_name is labelled
+-- '(unattributed — index maintenance)' instead of surfacing as a NULL bucket in the
+-- dashboard. endpoint_id stays NULL, so these rows group together per (date, workspace, sku).
 
 CREATE OR REPLACE TABLE IDENTIFIER(:catalog_name || '.' || :schema_name || '.mvFactVectorSearchCost') (
   endpoint_id    STRING         COMMENT 'Vector Search endpoint identifier, from system.billing.usage.usage_metadata.endpoint_id.',
@@ -21,10 +28,11 @@ CREATE OR REPLACE TABLE IDENTIFIER(:catalog_name || '.' || :schema_name || '.mvF
 INSERT OVERWRITE IDENTIFIER(:catalog_name || '.' || :schema_name || '.mvFactVectorSearchCost')
 SELECT
   bu.usage_metadata.endpoint_id                                    AS endpoint_id,
-  any_value(bu.usage_metadata.endpoint_name)                       AS endpoint_name,
+  coalesce(max(bu.usage_metadata.endpoint_name),
+           '(unattributed — index maintenance)')                   AS endpoint_name,
   bu.usage_date                                                    AS usage_date,
   cast(bu.workspace_id AS BIGINT)                                  AS workspace_id,
-  any_value(w.workspace_name)                                      AS workspace_name,
+  max(w.workspace_name)                                            AS workspace_name,
   bu.sku_name                                                      AS sku_name,
   cast(sum(bu.usage_quantity) AS DECIMAL(38, 6))                   AS dbus,
   cast(sum(bu.usage_quantity * coalesce(p.pricing.effective_list.default, 0))
@@ -41,6 +49,6 @@ LEFT JOIN system.billing.list_prices p
 WHERE bu.billing_origin_product = 'VECTOR_SEARCH'
   AND bu.usage_start_time >= date_sub(current_date(), :lookback_days)
 -- GROUP BY ALL groups by the non-aggregate columns only (endpoint_id, usage_date,
--- workspace_id, sku_name); endpoint_name/workspace_name are any_value() so they are
--- excluded from the grain. Avoids the alias/source-column ambiguity of naming them.
+-- workspace_id, sku_name); endpoint_name/workspace_name are wrapped in max() so they
+-- are excluded from the grain and resolved deterministically (both are stable per key).
 GROUP BY ALL;
