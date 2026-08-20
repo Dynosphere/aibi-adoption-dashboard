@@ -15,6 +15,16 @@
 -- Grain: (app_id, usage_date, workspace_id).
 -- Partition: (workspace_id).
 -- Stateless full rebuild each run over a bounded :lookback_days window.
+--
+-- ⚠️ KNOWN LIMITATION — per-app breakdown is approximate (deferred to Phase 2b):
+-- DBU/USD cost TOTALS reconcile to system.billing.usage (validated), but the per-app split
+-- can be imperfect. billing keys apps on usage_metadata.app_id (a UUID) while audit falls
+-- back to request_params.name when request_params.app_id is absent, so the billing⟗audit
+-- join can leave one app split across two rows (a cost-only UUID row + an events-only name
+-- row), and app_name is NULL on audit-only rows (surfaces as the dashboard "Top apps by
+-- views" null bucket). A clean fix needs an authoritative app_id<->app_name crosswalk, but
+-- adb_apps (the apps-crawl dimension) is currently EMPTY (a separate crawl bug). Deferred to
+-- Phase 2b together with the adb_apps crawl fix and the dashboard null-bucket cleanup.
 
 CREATE OR REPLACE TABLE IDENTIFIER(:catalog_name || '.' || :schema_name || '.mvFactAppUsage') (
   app_id           STRING        COMMENT 'App identifier; coalesces billing usage_metadata.app_id and audit request_params.app_id (falling back to request_params.name when app_id is absent from audit).',
