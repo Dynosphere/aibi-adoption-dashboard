@@ -260,8 +260,7 @@
    "name": "75376ae2",
    "displayName": "uc_models",
    "queryLines": [
-    "select * from mvfactmodelusage;\n",
-    "-- select * from mvfactservingendpointusage"
+    "select * from mvFactServingUsage"
    ],
    "catalog": "field_eng_slc",
    "schema": "adoption"
@@ -2536,8 +2535,8 @@
          "datasetName": "a19ba0f5",
          "fields": [
           {
-           "name": "sum(num_views)",
-           "expression": "SUM(`num_views`)"
+           "name": "sum(distinct_users)",
+           "expression": "SUM(`distinct_users`)"
           },
           {
            "name": "app_name",
@@ -2553,7 +2552,7 @@
        "widgetType": "bar",
        "encodings": {
         "x": {
-         "fieldName": "sum(num_views)",
+         "fieldName": "sum(distinct_users)",
          "axis": {
           "hideTitle": true
          },
@@ -2673,8 +2672,8 @@
          "datasetName": "75376ae2",
          "fields": [
           {
-           "name": "sum(num_model_accesses)",
-           "expression": "SUM(`num_model_accesses`)"
+           "name": "sum(request_count)",
+           "expression": "SUM(`request_count`)"
           }
          ],
          "disaggregated": false
@@ -2686,7 +2685,7 @@
        "widgetType": "counter",
        "encodings": {
         "value": {
-         "fieldName": "sum(num_model_accesses)"
+         "fieldName": "sum(request_count)"
         }
        },
        "frame": {
@@ -2716,12 +2715,12 @@
            "expression": "`workspace_name`"
           },
           {
-           "name": "monthly(viewed_date)",
-           "expression": "DATE_TRUNC(\"MONTH\", `viewed_date`)"
+           "name": "monthly(usage_date)",
+           "expression": "DATE_TRUNC(\"MONTH\", `usage_date`)"
           },
           {
-           "name": "sum(num_views)",
-           "expression": "SUM(`num_views`)"
+           "name": "sum(request_count)",
+           "expression": "SUM(`request_count`)"
           }
          ],
          "disaggregated": false
@@ -2733,14 +2732,14 @@
        "widgetType": "area",
        "encodings": {
         "x": {
-         "fieldName": "monthly(viewed_date)",
+         "fieldName": "monthly(usage_date)",
          "displayName": "Month",
          "scale": {
           "type": "temporal"
          }
         },
         "y": {
-         "fieldName": "sum(num_views)",
+         "fieldName": "sum(request_count)",
          "displayName": "Number of views",
          "scale": {
           "type": "quantitative"
@@ -2780,12 +2779,12 @@
            "expression": "`workspace_name`"
           },
           {
-           "name": "sum(num_views)",
-           "expression": "SUM(`num_views`)"
+           "name": "sum(request_count)",
+           "expression": "SUM(`request_count`)"
           },
           {
-           "name": "model_name",
-           "expression": "`model_name`"
+           "name": "entity_name",
+           "expression": "`entity_name`"
           }
          ],
          "disaggregated": false
@@ -2797,14 +2796,14 @@
        "widgetType": "bar",
        "encodings": {
         "x": {
-         "fieldName": "sum(num_views)",
+         "fieldName": "sum(request_count)",
          "displayName": "Total views",
          "scale": {
           "type": "quantitative"
          }
         },
         "y": {
-         "fieldName": "model_name",
+         "fieldName": "entity_name",
          "axis": {
           "hideTitle": true
          },
@@ -2846,11 +2845,11 @@
          "datasetName": "75376ae2",
          "fields": [
           {
-           "name": "model_name",
-           "expression": "`model_name`"
+           "name": "entity_name",
+           "expression": "`entity_name`"
           },
           {
-           "name": "model_name_associativity",
+           "name": "entity_name_associativity",
            "expression": "COUNT_IF(`associative_filter_predicate_group`)"
           }
          ],
@@ -2864,7 +2863,7 @@
        "encodings": {
         "fields": [
          {
-          "fieldName": "model_name",
+          "fieldName": "entity_name",
           "queryName": "dashboards/01f0d05a59391ad087e297c5e9c9aed5/datasets/01f0d05da6581eb7b55852603c695ee4_model_name"
          }
         ]
@@ -2892,8 +2891,8 @@
          "datasetName": "75376ae2",
          "fields": [
           {
-           "name": "num_inferences",
-           "expression": "`num_inferences`"
+           "name": "request_count",
+           "expression": "`request_count`"
           }
          ],
          "disaggregated": true
@@ -2905,7 +2904,7 @@
        "widgetType": "counter",
        "encodings": {
         "value": {
-         "fieldName": "num_inferences"
+         "fieldName": "request_count"
         }
        },
        "frame": {

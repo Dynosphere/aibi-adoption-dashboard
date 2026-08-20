@@ -15,4 +15,7 @@ variables:
   enable_genie_feedback_comments:
     description: Fetch free-text feedback comments per message (extra API call per message; set false to skip on very large workspaces)
     default: true
+  lookback_days:
+    description: Rolling window (days) of system-table history each cost fact rebuilds every run.
+    default: 365
   
