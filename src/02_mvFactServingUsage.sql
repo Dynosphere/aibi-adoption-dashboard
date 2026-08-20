@@ -12,6 +12,18 @@
 -- Stateless full rebuild each run over a bounded :lookback_days window.
 -- endpoint_usage opt-in note: customers who have not enabled usage tracking on an endpoint
 -- will see request_count = 0, input_tokens = 0, output_tokens = 0 for that endpoint.
+--
+-- ⚠️ KNOWN LIMITATIONS — cost columns are INCOMPLETE; a Phase-2b rework is planned. Do NOT
+-- rely on dbus/dollars from this fact yet:
+--   * C2: billing is attached via the endpoint_usage date key, so endpoints WITHOUT
+--     usage-tracking opt-in contribute no cost row — MODEL_SERVING cost is undercaptured
+--     (validated against live billing: fact captured ~4% of raw system.billing.usage DBUs).
+--   * I1: billing is endpoint-grain but this fact is served_entity-grain, so endpoint cost is
+--     replicated across an endpoint's served entities (overstates per-entity cost).
+--   * I2: system.serving.served_entities is an SCD and is not deduped to the latest config
+--     version, so a served_entity_id can appear on more than one row (breaks grain uniqueness).
+--   Fix requires a cost-attribution design decision (endpoint-grain vs allocate) + live-data
+--   validation; deferred to Phase 2b (metric-views rework).
 
 CREATE OR REPLACE TABLE IDENTIFIER(:catalog_name || '.' || :schema_name || '.mvFactServingUsage') (
   endpoint_id        STRING    COMMENT 'Serving endpoint identifier from system.serving.served_entities.',
