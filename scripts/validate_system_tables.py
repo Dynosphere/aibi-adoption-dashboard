@@ -3,7 +3,7 @@
 Writes the consolidated output to `docs/v3-system-table-validation.md`.
 
 Usage:
-    DATABRICKS_HOST=https://e2-demo-field-eng.cloud.databricks.com \
+    DATABRICKS_HOST=https://<your-workspace>.cloud.databricks.com \
     DATABRICKS_TOKEN=... \
     python scripts/validate_system_tables.py
 """

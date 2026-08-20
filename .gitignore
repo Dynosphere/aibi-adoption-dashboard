@@ -3,3 +3,4 @@ includes/config.json
 .DS_Store
 __pycache__/
 .isaac/
+docs/superpowers/

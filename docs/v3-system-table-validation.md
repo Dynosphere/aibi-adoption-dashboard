@@ -1,5 +1,5 @@
 # V3 system-table validation
-**Workspace:** https://e2-demo-field-eng.cloud.databricks.com
+**Workspace:** https://<your-workspace>.cloud.databricks.com
 **Warehouse:** Shared endpoint (`8baced1ff014912d`)
 **Generated:** by `scripts/validate_system_tables.py`
 
