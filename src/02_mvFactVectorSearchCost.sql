@@ -40,4 +40,7 @@ LEFT JOIN system.billing.list_prices p
   AND (p.price_end_time IS NULL OR bu.usage_start_time < p.price_end_time)
 WHERE bu.billing_origin_product = 'VECTOR_SEARCH'
   AND bu.usage_start_time >= date_sub(current_date(), :lookback_days)
-GROUP BY endpoint_id, usage_date, workspace_id, sku_name;
+-- GROUP BY ALL groups by the non-aggregate columns only (endpoint_id, usage_date,
+-- workspace_id, sku_name); endpoint_name/workspace_name are any_value() so they are
+-- excluded from the grain. Avoids the alias/source-column ambiguity of naming them.
+GROUP BY ALL;

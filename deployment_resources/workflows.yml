@@ -4,6 +4,7 @@ resources:
       name: adoption_dashboard_workflow
       tasks:
         - task_key: Ingest_Metadata
+          environment_key: default
           notebook_task:
             notebook_path: ../src/01_get_metadata.ipynb
         - task_key: Process_MatVews
@@ -84,4 +85,13 @@ resources:
           default: ${var.enable_genie_feedback_comments}
         - name: lookback_days
           default: ${var.lookback_days}
+      environments:
+        # Serverless environment for the Ingest_Metadata notebook task. Provides the
+        # Databricks SDK as a managed dependency instead of an in-notebook %pip install
+        # (immutable-constraint serverless compute rejects `%pip install ... --upgrade`).
+        - environment_key: default
+          spec:
+            client: "4"
+            dependencies:
+              - databricks-sdk>=0.129.0
       performance_target: PERFORMANCE_OPTIMIZED

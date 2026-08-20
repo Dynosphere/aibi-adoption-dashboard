@@ -55,7 +55,7 @@ WITH
     WHERE bu.billing_origin_product = 'APPS'
       AND bu.usage_metadata.app_id IS NOT NULL
       AND bu.usage_start_time >= date_sub(current_date(), :lookback_days)
-    GROUP BY app_id, usage_date, workspace_id
+    GROUP BY ALL
   ),
 
   -- Aggregate audit lifecycle event counts from system.access.audit for Apps rows.
