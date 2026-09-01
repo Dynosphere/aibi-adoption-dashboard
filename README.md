@@ -1,5 +1,8 @@
 # Databricks Adoption Dashboard
 
+🚨 **NOTICE:** The latest update to this repo may have some breaking changes. There is a pre-update branch of the repository cut which you can use if this presents an issue. If it does, let us know so we can fix it! 🚨
+🚨 **NOTICE:** We will shortly be migrating to a new home on Databricks Solutions. Watch out for a new version there, complete with some new features like a stable data model, metric view definitions and a pre-packaged genie agent 🚨
+
 The **Databricks Adoption Dashboard** provides an **out-of-the-box capability** to analyse and visualise adoption metrics across your organisation’s **AI/BI Dashboards, Genie Spaces, Apps, and Models**.  
 It helps data teams, business stakeholders, and platform owners quickly understand how Databricks is being used, where adoption is growing, and where additional enablement might be needed.
 
